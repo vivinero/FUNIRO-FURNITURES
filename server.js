@@ -7,5 +7,5 @@ app.use(express.json())
 app.use(userRouter)
 
 app.listen(process.env.port,()=>{
-    console.log(`Server is Listening on port${process.env.port}`);
+    console.log(`Server is Listening on port: ${process.env.port}`);
 })
