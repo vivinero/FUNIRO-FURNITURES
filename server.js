@@ -5,6 +5,8 @@ const categoryRouter = require("./routers/categoryRouter")
 const productRouter = require("./routers/productRouter")
 const cors = require('cors');
 
+
+//create express instance
 const app = express()
 
 app.use(express.json())
