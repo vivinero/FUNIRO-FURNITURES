@@ -51,40 +51,47 @@ exports.signUp = async (req, res)=>{
     }
 }
 
-//OTP TIME GENERATION
-const OTP_EXPIRATION_TIME = 300000;
+// Set OTP to expire in 5 minutes
+const OTP_EXPIRATION_TIME = 300000; 
 
-exports.sendOTP =async (req, res)=>{
+exports.sendOTP = async (req, res) => {
     try {
-        const {email} = req.body;
-         //generate OTP
-        const otp = otpGenerator.generate(6, {upperCaseAlphabets: false, specialChars: false})
+        const { email } = req.body;
 
-         //hash otp password
-        const salt = bcryptjs.genSaltSync(12)
-        const hashOTP = bcryptjs.hashSync(otp, salt)
-        //store hash otp and expiration in the database
-        await userModel.findByIdAndUpdate({ email }, {otp: hashOTP, otpExpires: Date.now() + OTP_EXPIRATION_TIME})
+        // Generate OTP
+        const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false });
 
-        //send OTP to email
-        const mailOptions ={
+        // Hash OTP
+        const salt = bcryptjs.genSaltSync(12);
+        const hashOTP = bcryptjs.hashSync(otp, salt);
+
+        // Here we store hashed OTP and expiration in the DB
+        await userModel.findOneAndUpdate(
+            { email },
+            { otp: hashOTP, otpExpires: Date.now() + OTP_EXPIRATION_TIME },
+            { new: true, upsert: true }
+        );
+
+        // Send OTP to the user's email addresss
+        const mailOptions = {
             from: process.env.EMAIL,
             to: email,
             subject: "Your OTP code",
             text: `Your OTP code is ${otp}. It is valid for 5 minutes.`,
-        }; 
+        };
 
-        await transporter.sendMail(mailOptions)
+        await transporter.sendMail(mailOptions);
         res.status(200).json({
             message: "OTP has been sent to your mail"
-        })
+        });
 
     } catch (error) {
         res.status(500).json({
             error: error.message
-        })
+        });
     }
-}
+};
+
 
 
 exports.verifyOTP = async (req, res) => {
@@ -94,22 +101,24 @@ exports.verifyOTP = async (req, res) => {
         const user = await userModel.findOne({ email });
         if (!user) {
             return res.status(404).json({
-                error: 'User not found' 
+                 error: 'User not found' 
             });
         }
 
         if (user.otpExpires < Date.now()) {
-            return res.status(400).json({ 
-                error: 'OTP has expired' 
+            return res.status(400).json({
+                 error: 'OTP has expired' 
             });
         }
 
         const isMatch = bcryptjs.compareSync(otp, user.otp);
         if (!isMatch) {
-            return res.status(400).json({ error: 'Invalid OTP' });
+            return res.status(400).json({
+                error: 'This OTP Invalid '
+            });
         }
 
-        // Clear OTP and OTP expiration time
+        // This is to clear OTP and OTP expiration tim
         user.otp = undefined;
         user.otpExpires = undefined;
         await user.save();
@@ -118,7 +127,9 @@ exports.verifyOTP = async (req, res) => {
             message: 'OTP verified successfully' 
         });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({
+             error: error.message 
+        });
     }
 };
 
