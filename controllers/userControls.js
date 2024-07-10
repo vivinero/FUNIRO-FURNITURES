@@ -37,7 +37,11 @@ exports.signUp = async (req, res)=>{
             email: newUser.email,
             firstName: newUser.firstName,
             lastName: newUser.lastName,
+<<<<<<< HEAD
         },process.env.JWT_SECRET,{expiresIn:"6000s"})
+=======
+        },process.env.jwtSecret,{expiresIn:"6000s"})
+>>>>>>> f29e86700ad6e9fb3b422bccbe4446f24fe5590c
 
         res.status(200).json({
             message: `Hello, ${newUser.firstName} Your Account Has Been Successfully Created`,
@@ -49,6 +53,7 @@ exports.signUp = async (req, res)=>{
             error: error.message
         })
     }
+<<<<<<< HEAD
 }
 
 // Set OTP to expire in 5 minutes
@@ -283,4 +288,6 @@ exports.resetPassword = async (req, res) => {
             message: error.message
         })
     }
+=======
+>>>>>>> f29e86700ad6e9fb3b422bccbe4446f24fe5590c
 }

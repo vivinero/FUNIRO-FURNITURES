@@ -1,4 +1,5 @@
 const mongoose = require("mongoose")
+const { type } = require("os")
 const userSchema = new mongoose.Schema({
     firstName: {
         type: String,
@@ -19,16 +20,6 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         require: true
-    },
-    isVerified:{
-        type: Boolean,
-        default: false
-    },
-    otp: {
-        type: String,
-    },
-    otpExpires: {
-        type: Date,
     },
 }, {timestamps: true})
 
