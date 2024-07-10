@@ -27,7 +27,6 @@ const getAllCategory = async (req, res) => {
 
 
 
-
 // Update an existing category
 const updateCategory = async (req, res) => {
     try {

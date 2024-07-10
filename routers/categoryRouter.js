@@ -5,7 +5,7 @@ const { authenticate } = require("../middlewares/authentication");
 
 
 //endpoint to create product category
-router.post('/create-category',authenticate,createCategory)
+router.post('/create-category',createCategory)
 
 // GET /api/categories - Fetch all categories with sub-categories
 router.get('/all-categories', getAllCategory)

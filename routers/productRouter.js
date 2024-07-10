@@ -5,7 +5,7 @@ const { authenticate } = require("../middlewares/authentication");
 const {upload} = require("../middlewares/multer")
 
 //endpoint to create product category
-router.post('/create-product/:categoryId', upload.array('image', 5), authenticate, createProduct);
+router.post('/create-product/:categoryId', upload.array('image', 5),  createProduct);
 
 //endpoint to update product 
 router.put('/update-product/:id', upload.array('image', 5), authenticate, updateProduct);

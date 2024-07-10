@@ -1,23 +1,89 @@
 const Product = require('../models/productModel');
 const Category = require('../models/categoryModel')
 const cloudinary = require('../middlewares/cloudinary')
+const path = require('path');
+const fs = require('fs');
 
 
 // Create a new product
+// const createProduct = async (req, res) => {
+//     try {
+//        //const userId = req.user.userId;
+//         const { categoryId } = req.params;
+//         const { itemName, detail, price } = req.body;
+
+//         if (!userId) {
+//             return res.status(404).json({
+//                 error: 'User not found'
+//             });
+//         }
+
+//         const theCategory = await Category.findById(categoryId);
+
+//         if (!theCategory) {
+//             return res.status(404).json({
+//                 error: 'Category not found'
+//             });
+//         }
+
+//         let imageDetails = {};
+
+//         // Handle image upload if a file is provided
+//         if (req.file) {
+//             // Path to the uploaded file
+//             const imageFilePath = path.resolve(req.file.path);
+
+//             // Check if the file exists before proceeding
+//             if (!fs.existsSync(imageFilePath)) {
+//                 return res.status(400).json({
+//                     message: 'Uploaded file not found'
+//                 });
+//             }
+
+//             // Upload the image to Cloudinary
+//             const cloudinaryUpload = await cloudinary.uploader.upload(imageFilePath, {
+//                 folder: 'productImages'
+//             });
+
+//             imageDetails = {
+//                 public_id: cloudinaryUpload.public_id,
+//                 url: cloudinaryUpload.secure_url
+//             };
+
+//             // Optionally delete the local file after upload
+//             fs.unlinkSync(imageFilePath);
+//         }
+
+       
+
+//         const newProduct = await Product.create({
+//             itemName,
+//             detail,
+//             price,
+//             image: imageDetails,
+//             category: categoryId
+//         });
+
+//         res.status(201).json({
+//             message: 'Product created successfully',
+//             data: newProduct
+//         });
+//     } catch (error) {
+//         res.status(500).json({
+//             error: error.message
+//         });
+//     }
+// };
+
+
+
 const createProduct = async (req, res) => {
     try {
-       const userId = req.user.userId;
         const { categoryId } = req.params;
         const { itemName, detail, price } = req.body;
 
-        if (!userId) {
-            return res.status(404).json({
-                error: 'User not found'
-            });
-        }
 
         const theCategory = await Category.findById(categoryId);
-
         if (!theCategory) {
             return res.status(404).json({
                 error: 'Category not found'
@@ -52,14 +118,13 @@ const createProduct = async (req, res) => {
             fs.unlinkSync(imageFilePath);
         }
 
-       
-
+        // Create the new product
         const newProduct = await Product.create({
             itemName,
             detail,
             price,
             image: imageDetails,
-            category: categoryId
+            category: categoryId,
         });
 
         res.status(201).json({
@@ -68,10 +133,13 @@ const createProduct = async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({
-            error: error.message
+            error: 'Internal Server Error: ' + error.message
         });
     }
 };
+
+
+
 //update a product by id
 const updateProduct = async (req, res) => {
     try {
