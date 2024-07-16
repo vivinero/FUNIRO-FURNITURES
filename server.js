@@ -3,6 +3,7 @@ require('./config/config')
 const userRouter = require("./routers/userRouter")
 const categoryRouter = require("./routers/categoryRouter")
 const productRouter = require("./routers/productRouter")
+const cartRouter = require("./routers/cartRouter")
 const cors = require('cors');
 
 
@@ -35,6 +36,7 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: 'Internal Server Error: ' + err });
     next();
 });
+app.use(cartRouter)
 
 app.listen(process.env.port,()=>{
     console.log(`Server is Listening on port: ${process.env.port}`);
