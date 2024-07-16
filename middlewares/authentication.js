@@ -16,7 +16,7 @@ const authenticate = async (req, res, next) => {
                 message: "Token not found",
             });
         }
-        const decodeToken = jwt.verify(token, process.env.SECRET)
+        const decodeToken = jwt.verify(token, process.env.JWT_SECRET)
         const user = await userModel.findById(decodeToken.userId);
         if (!user) {
             return res.status(404).json({
@@ -24,8 +24,10 @@ const authenticate = async (req, res, next) => {
             });
         }
 
-        req.user = decodeToken;
-
+        req.user = {
+            userId: user._id,
+            decodeToken
+        }
 
         next();
         
