@@ -226,6 +226,8 @@ exports.signOut = async (req, res) => {
         })
     }
 }
+
+
 exports.forgotPassword = async (req, res) => {
     try {
         const myUser = await userModel.findOne({email: req.body.email})
