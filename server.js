@@ -4,6 +4,8 @@ const userRouter = require("./routers/userRouter")
 const categoryRouter = require("./routers/categoryRouter")
 const productRouter = require("./routers/productRouter")
 const cartRouter = require("./routers/cartRouter")
+const filterRouter = require('./routers/filterRouter.js')
+const contactUsRouter = require('./routers/contactUsRouter.js')
 const cors = require('cors');
 
 
@@ -37,6 +39,11 @@ app.use((err, req, res, next) => {
     next();
 });
 app.use(cartRouter)
+app.use(filterRouter)
+app.use(contactUsRouter)
+
+app.use('/upload', express.static('uploads'))
+
 
 app.listen(process.env.port,()=>{
     console.log(`Server is Listening on port: ${process.env.port}`);
