@@ -1,8 +1,8 @@
 const router = require("express").Router();
 
 const { createProduct, updateProduct, getAllProducts, getProductById, deleteProduct } = require("../controllers/productController");
-const { authenticate } = require("../middlewares/authentication");
-const {upload} = require("../middlewares/multer")
+const { authenticate } = require("../middleWares/authentication");
+const {upload} = require("../middleWares/multer")
 
 //endpoint to create product category
 router.post('/create-product/:categoryId', upload.array('image', 5), authenticate, createProduct);

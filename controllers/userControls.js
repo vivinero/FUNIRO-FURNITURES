@@ -1,28 +1,34 @@
-const userModel = require('../models/userModel')
-require("dotenv").config()
-const otpGenerator = require('otp-generator')
-const transporter = require('../config/nodeMailer')
-const bcryptjs = require("bcryptjs")
-const jwt = require("jsonwebtoken")
+const userModel = require('../models/userModel'); // Adjust the path as needed
+const otpGenerator = require('otp-generator');
+const bcryptjs = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { sendEmail } = require('../helpers/mail'); // Adjust the path as needed
+const dynamicHtml = require('../helpers/html')
 
-exports.signUp = async (req, res)=>{
+
+const OTP_EXPIRATION_TIME = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+exports.signUp = async (req, res) => {
     try {
-        const {firstName, lastName, email, phoneNumber, password, confirmPassword} = req.body
-        const emailExist = await userModel.findOne({email})
+        const { firstName, lastName, email, phoneNumber, password, confirmPassword } = req.body;
+
+        const emailExist = await userModel.findOne({ email });
         if (emailExist) {
             return res.status(404).json({
-                error: "User already exist"
-            })
+                error: "User already exists"
+            });
         }
 
-        if (confirmPassword != password) {
+        if (confirmPassword !== password) {
             return res.status(400).json({
                 error: "Password mismatch"
-            })
+            });
         }
-        const salt = bcryptjs.genSaltSync(12)
-        const hash = bcryptjs.hashSync(password, salt)
-        //register the user
+
+        const salt = bcryptjs.genSaltSync(12);
+        const hash = bcryptjs.hashSync(password, salt);
+
+        // Register the user
         const newUser = await userModel.create({
             firstName: firstName.toLowerCase(),
             lastName: lastName.toLowerCase(),
@@ -30,59 +36,40 @@ exports.signUp = async (req, res)=>{
             password: hash,
             phoneNumber,
             confirmPassword: hash
-        })
+        });
+
+        // Generate and send OTP
+        const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, lowerCaseAlphabets: false, specialChars: false });
+        const hashOTP = bcryptjs.hashSync(otp, salt);
+        newUser.otp = hashOTP;
+        newUser.otpExpires = Date.now() + OTP_EXPIRATION_TIME;
+        await newUser.save();
+
+        const verificationLink = `http://your-website.com/verify?otp=${otp}&email=${email}`;
+
+        const emailOptions = {
+            email: email,
+            subject: "Your OTP code",
+            text: `<p>Your OTP code is <strong>${otp}</strong>. It is valid for 5 minutes.</p>`,
+            html: dynamicHtml(otp, verificationLink),
+        };
+
+        const emailResult = await sendEmail(emailOptions);
+        if (emailResult.status === 'error') {
+            return res.status(500).json({ error: emailResult.message });
+        }
 
         const token = jwt.sign({
             userId: newUser._id,
             email: newUser.email,
             firstName: newUser.firstName,
             lastName: newUser.lastName,
-        },process.env.jwtSecret,{expiresIn:"6000s"})
+        }, process.env.JWT_SECRET, { expiresIn: "6000s" });
 
         res.status(200).json({
-            message: `Hello, ${newUser.firstName} Your Account Has Been Successfully Created`,
-            data: newUser
-        });
-
-    } catch (error) {
-        res.status(500).json({
-            error: error.message
-        })
-    }
-}
-
-// Set OTP to expire in 5 minutes
-const OTP_EXPIRATION_TIME = 300000; 
-
-exports.sendOTP = async (req, res) => {
-    try {
-        const { email } = req.body;
-
-        // Generate OTP
-        const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false });
-
-        // Hash OTP
-        const salt = bcryptjs.genSaltSync(12);
-        const hashOTP = bcryptjs.hashSync(otp, salt);
-
-        // Here we store hashed OTP and expiration in the DB
-        await userModel.findOneAndUpdate(
-            { email },
-            { otp: hashOTP, otpExpires: Date.now() + OTP_EXPIRATION_TIME },
-            { new: true, upsert: true }
-        );
-
-        // Send OTP to the user's email addresss
-        const mailOptions = {
-            from: process.env.EMAIL,
-            to: email,
-            subject: "Your OTP code",
-            text: `Your OTP code is ${otp}. It is valid for 5 minutes.`,
-        };
-
-        await transporter.sendMail(mailOptions);
-        res.status(200).json({
-            message: "OTP has been sent to your mail"
+            message: `Hello, ${newUser.firstName}. Your account has been successfully created and an OTP has been sent to your email.`,
+            data: newUser,
+            token
         });
 
     } catch (error) {
