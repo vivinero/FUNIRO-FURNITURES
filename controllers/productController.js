@@ -1,9 +1,7 @@
-const Product = require("../models/productModel");
-const Category = require("../models/categoryModel");
-const cloudinary = require("../middlewares/cloudinary");
-const path = require("path");
-const fs = require("fs");
-const productModel = require("../models/productModel");
+const Product = require('../models/productModel');
+const Category = require('../models/categoryModel')
+const cloudinary = require('../middlewares/cloudinary')
+
 
 // Create a new product
 // const createProduct = async (req, res) => {

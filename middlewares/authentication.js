@@ -33,8 +33,8 @@ const authenticate = async (req, res, next) => {
         
     } catch (error) {
         if (error instanceof jwt.JsonWebTokenError){
-            return res.status(501).json({
-                message: 'Session timeout, please login to continue',
+            return res.status(401).json({
+                message: 'Invalid or expired token, please login to continue',
             })
         }
         return res.status(500).json({

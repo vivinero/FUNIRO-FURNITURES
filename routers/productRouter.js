@@ -1,6 +1,6 @@
 const router = require("express").Router();
 
-const { createProduct, updateProduct, shareProduct, getAllProducts, compareProducts, getProductById, updateColor, deleteColor, deleteProduct, updateSize, deleteSize } = require("../controllers/productController");
+const { createProduct, updateProduct, getAllProducts, getProductById, deleteProduct } = require("../controllers/productController");
 const { authenticate } = require("../middlewares/authentication");
 const {upload} = require("../middlewares/multer")
 
