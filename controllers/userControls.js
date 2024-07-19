@@ -1,11 +1,11 @@
-const userModel = require('../models/userModel'); // Adjust the path as needed
+const userModel = require('../models/userModel'); 
 const otpGenerator = require('otp-generator');
 const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { sendEmail } = require('../helpers/mail'); // Adjust the path as needed
+const { sendEmail } = require('../helpers/mail'); 
 const dynamicHtml = require('../helpers/html')
 
-
+//otp verification time
 const OTP_EXPIRATION_TIME = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 exports.signUp = async (req, res) => {
@@ -28,7 +28,7 @@ exports.signUp = async (req, res) => {
         const salt = bcryptjs.genSaltSync(12);
         const hash = bcryptjs.hashSync(password, salt);
 
-        // Register the user
+        // Register the newuser
         const newUser = await userModel.create({
             firstName: firstName.toLowerCase(),
             lastName: lastName.toLowerCase(),
@@ -38,7 +38,7 @@ exports.signUp = async (req, res) => {
             confirmPassword: hash
         });
 
-        // Generate and send OTP
+        // Generate and send OTP to the user
         const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, lowerCaseAlphabets: false, specialChars: false });
         const hashOTP = bcryptjs.hashSync(otp, salt);
         newUser.otp = hashOTP;
@@ -91,13 +91,13 @@ exports.verifyOTP = async (req, res) => {
                  error: 'User not found' 
             });
         }
-
+        //check if otp does not meet required time
         if (user.otpExpires < Date.now()) {
             return res.status(400).json({
                  error: 'OTP has expired' 
             });
         }
-
+        //check if the otp match the one sent
         const isMatch = bcryptjs.compareSync(otp, user.otp);
         if (!isMatch) {
             return res.status(400).json({
@@ -126,7 +126,7 @@ exports.logIn = async(req, res)=>{
     try {
         //get data from the request body
         const {email, password}= req.body
-        //chech if user email already exist
+        //chech if user email is already exist
         const user = await userModel.findOne({email: email.toLowerCase()})
         if (!user) {
             return res.status(404).json({
