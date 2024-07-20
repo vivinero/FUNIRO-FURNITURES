@@ -105,9 +105,10 @@ exports.verifyOTP = async (req, res) => {
             });
         }
 
-        // This is to clear OTP and OTP expiration tim
+        // This is to clear OTP and OTP expiration time and verify the user
         user.otp = undefined;
         user.otpExpires = undefined;
+        user.isVerified = true;
         await user.save();
 
         res.status(200).json({ 
