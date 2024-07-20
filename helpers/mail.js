@@ -7,13 +7,13 @@ async function sendEmail(options) {
         port: 587,
         secure: false,
         auth: {
-            user: process.env.EMAIL,
-            pass: process.env.EMAIL_PASSWORD,
+            user: process.env.user,
+            pass: process.env.emailPassWord,
         },
     });
 
     const mailOptions = {
-        from: process.env.EMAIL,
+        from: process.env.user,
         to: options.email,
         subject: options.subject,
         text: options.text,
@@ -29,3 +29,39 @@ async function sendEmail(options) {
 }
 
 module.exports = { sendEmail };
+
+// const nodemailer = require('nodemailer');
+// require('dotenv').config();
+
+// async function sendEmail(options) {
+//     try {
+//         const transporter = nodemailer.createTransport({
+//             service: process.env.service,
+//             auth: {
+//                 user: process.env.user, 
+//                 pass: process.env.emailPassWord,
+//             }
+//         })
+//             const mailOption = {
+//               from: process.env.user,
+//               to: options.email,
+//               subject: options.subject,
+//               text: options.text,
+//               html: options.html
+//             };
+        
+//             await transporter.sendMail(mailOption);   
+//             return {
+//                 success: true,
+//                 message: 'Email sent successfully',
+//             }
+//     } catch (err) {
+//         console.error('Error sending mail:', err.message);
+//         return {
+//             success: false,
+//             message: 'Error sending mail: ' + err.message,
+//         };
+//     }
+// }
+
+// module.exports = {sendEmail};
