@@ -1,6 +1,7 @@
 const cartModel = require('../models/cartModel');
 const productModel = require('../models/productModel');
 const userModel = require('../models/userModel');
+const orderModel = require('../models/orderModelss');
 
 
 
@@ -280,11 +281,47 @@ const deleteCart = async (req, res) => {
 
 }
 
+const checkout = async (req, res) => {
+    try {
+      const { userId } = req.params;
+  
+      // Find the user's cart
+      let cart = await cartModel.findOne({ userId: userId });
+  
+      if (!cart || cart.products.length === 0) {
+        return res.status(400).json({ message: "Your cart is empty." });
+      }
+  
+      // Process the checkout: Create an order
+      const order = new orderModel({
+        userId: userId,
+        products: cart.products,
+        total: cart.total
+      });
+  
+      // Save the order to the database
+      await order.save();
+  
+      // Clear the cart
+      cart.products = [];
+      cart.total = 0;
+      await cart.save();
+  
+      return res.status(200).json({ message: "Checkout successful. Your cart has been cleared.", order });
+    } catch (err) {
+      return res.status(500).json({ message: `Error during checkout: ${err.message}` });
+    }
+  };
+  
+ 
+  
+
 
 module.exports = {
     addToCart,
     removeFromCart,
     viewCart,
     deleteCart,
-    updateCart
+    updateCart,
+    checkout
 }

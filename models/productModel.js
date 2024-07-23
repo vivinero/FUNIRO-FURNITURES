@@ -13,9 +13,9 @@ const sizeSchema = new mongoose.Schema({
 
 const productSchema = new mongoose.Schema(
   {
-    itemName: {
-      type: String,
-      require: true,
+    itemName : {
+      type : String,
+      required: true,
     },
     description: {
       type: String,
