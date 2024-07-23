@@ -1,6 +1,6 @@
 const express = require('express');
 const filterProduct  = require('../controllers/filterController');
-const { authenticate } = require('../middlewares/authentication');
+const { authenticate } = require('../middleWares/authentication');
 
 // Create the router instance
 const filterRouter = express.Router();

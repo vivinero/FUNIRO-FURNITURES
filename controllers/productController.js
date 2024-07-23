@@ -1,6 +1,6 @@
 const Product = require('../models/productModel');
 const Category = require('../models/categoryModel')
-const cloudinary = require('../middlewares/cloudinary')
+const cloudinary = require('../middleWares/cloudinary')
 
 
 // Create a new product

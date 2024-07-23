@@ -1,7 +1,7 @@
 const router = require("express").Router();
 
 const { createCategory, updateCategory,getAllCategory, getAllCategories, getCategoryById, deleteCategory } = require("../controllers/categoryController");
-const { authenticate } = require("../middlewares/authentication");
+const { authenticate } = require("../middleWares/authentication");
 
 
 //endpoint to create product category
