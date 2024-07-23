@@ -17,7 +17,8 @@ const CartSchema = new Schema({
          price:{ type: Number},
          sub_total:{ type: Number},
          productName:{ type:String},
-         productImage:{ type:String}
+         productImage:{ type:String},
+         size:{ type: String },
     }],
     total:{
         type:Number
