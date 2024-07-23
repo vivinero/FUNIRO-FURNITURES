@@ -184,36 +184,58 @@ exports.getOneUser = async(req, res)=>{
 }
 
 
+// exports.signOut = async (req, res) => {
+//     try {
+//         const token = req.headers.authorization.spilt(' ')[1]
+//         if (!token) {
+//             return res.status(404).json({
+//                 message: "Authorization failed unable to find token"
+//             })
+//         } 
+//         //get user id
+//         const userId = req.user.userId
+
+//         //find user
+//         const user = await userModel.findById(userId)
+
+//         //push the user to blacklist and save
+//         user.blackList.push(token)
+
+//         //save user
+//         await user.save()
+
+//         //show success
+//         res.status(200).json({
+//             message: "You have successfully logged out "
+//         })
+//     } catch (error) {
+//         res.status(500).json({
+//             message: error.message
+//         })
+//     }
+// }
+
 exports.signOut = async (req, res) => {
     try {
-        const token = req.headers.authorization.spilt(' ')[1]
-        if (!token) {
-            return res.status(404).json({
-                message: "Authorization failed unable to find token"
-            })
-        } 
-        //get user id
-        const userId = req.user.userId
-
-        //find user
-        const user = await userModel.findById(userId)
-
-        //push the user to blacklist and save
-        user.blackList.push(token)
-
-        //save user
-        await user.save()
-
-        //show success
-        res.status(200).json({
-            message: "You have successfully logged out "
-        })
+      const userId = req.params.userId;
+      const newUser = await userModel.findById(userId);
+      if (!newUser) {
+        return res.status(404).json({
+          message: "User not found",
+        });
+      }
+  
+      newUser.token = null;
+      await newUser.save();
+      return res.status(201).json({
+        message: `user has been signed out successfully`,
+      });
     } catch (error) {
-        res.status(500).json({
-            message: error.message
-        })
+      return res.status(500).json({
+        message: "Internal Server Error: " + error.message,
+      });
     }
-}
+  };
 
 
 exports.forgotPassword = async (req, res) => {
