@@ -6,7 +6,7 @@ const {signUp, logIn, signOut, getOneUser, sendOTP, verifyOTP} = require("../con
 userRouter.post('/sign-up', userValidation,signUp)
 userRouter.post('/log-in', logIn)
 userRouter.get('/get-one', authenticate, getOneUser)
-userRouter.post('/sign-out', signOut)
+userRouter.post('/sign-out/:userId', authenticate, signOut)
 userRouter.post('/verify-otp', verifyOTP);
 
 
