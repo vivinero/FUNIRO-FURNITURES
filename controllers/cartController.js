@@ -4,8 +4,6 @@ const userModel = require('../models/userModel');
 const orderModel = require('../models/orderModelss');
 
 
-
-
 const addToCart = async (req, res) => {
     try {
         const { userId, productId } = req.params;
