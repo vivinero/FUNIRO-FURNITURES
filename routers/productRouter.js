@@ -11,7 +11,12 @@ const {  createProduct,
     deleteColor,
     getProductById,
     deleteProduct,
-    sortProducts, } = require("../controllers/productController");
+    toggleLikeProduct,
+    getProductLikes,
+    rateProduct,
+    commentProduct,
+    allComments
+     } = require("../controllers/productController");
 const { authenticate } = require("../middleWares/authentication");
 const {upload} = require("../middleWares/multer")
 
@@ -23,6 +28,22 @@ router.put('/update-product/:productId', upload.array('images', 5), updateProduc
 
 //endpoint to share product
 router.get('/share/:productId', shareProduct)
+
+//endpoint to like products
+router.post('/product/:id/like', authenticate, toggleLikeProduct);
+
+//endpoint to get all likes
+router.get('/product/:id/likes', getProductLikes);
+
+//endpoint to rate product
+ router.post ("/product/:productId/rate", authenticate, rateProduct)
+
+ //endpoint to make comment
+ router.post('/product/:id/comment', authenticate, commentProduct)
+
+ //endpoint to get all comments
+ router.get('/product/:id/comments', authenticate, allComments)
+
 
 //endpoint to update size and price of product
 router.put('/update-size/:productId/:sizeId', updateSize);
@@ -40,10 +61,17 @@ router.post('/compare', compareProducts)
 router.delete('/delete-color/:productId/:colors/:colorIndex', deleteColor);
 
 //endpoint to get all products
-router.get('/get-products', authenticate, getAllProducts)
+router.get('/get-products', getAllProducts)
 
 //endpoint to get one product by id
-router.get("/get-one-product/:id",authenticate, getProductById)
+router.get('/get-one-product/:id', async (req, res) => {
+    try {
+      const product = await getProductById(req.params.id);
+      res.json(product);
+    } catch (error) {
+      res.status(404).json({ error: error.message });
+    }
+  });
 
 //endpoint to delete product by id
 router.delete("/delete-product/:id", authenticate, deleteProduct)
