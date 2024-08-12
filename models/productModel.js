@@ -63,7 +63,11 @@ const productSchema = new mongoose.Schema(
         price: Number,
       }
     ],
-    sizes: [sizeSchema], // Array of sizes with prices
+    discountPercentage: {
+      type: Number,
+      default: 0, // Default to 0% discount
+    },
+    sizes: [sizeSchema], 
     category: {
       type: mongoose.SchemaTypes.ObjectId,
       ref: "Category",

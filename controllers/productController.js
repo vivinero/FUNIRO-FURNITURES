@@ -25,38 +25,38 @@ const cloudinary = require("../middlewares/cloudinary");
 //   };
 // }
 
-function calculateDiscountAndTag(product) {
-  const now = new Date();
-  const productAgeInMinutes = Math.floor(
-    (now - product.createdAt) / (1000 * 60)
-  );
+// function calculateDiscountAndTag(product) {
+//   const now = new Date();
+//   const productAgeInMinutes = Math.floor(
+//     (now - product.createdAt) / (1000 * 60)
+//   );
 
-  let discount = 0;
-  let isNew = false;
+//   let discount = 0;
+//   let isNew = false;
 
-  if (productAgeInMinutes <= 2) {
-    isNew = true; // Product is new
-  } else {
-    discount = 0.1; // 10% discount for products older than 2 minutes
-  }
+//   if (productAgeInMinutes <= 2) {
+//     isNew = true; // Product is new
+//   } else {
+//     discount = 0.1; // 10% discount for products older than 2 minutes
+//   }
 
-  // Discount the general price
-  const discountedGeneralPrice = product.price * (1 - discount);
+//   // Discount the general price
+//   const discountedGeneralPrice = product.price * (1 - discount);
 
-  const discountedPrices = product.sizes.map((sizeObj) => {
-    const discountedPrice = sizeObj.price * (1 - discount);
-    return {
-      size: sizeObj.size,
-      price: discountedPrice,
-    };
-  });
+//   const discountedPrices = product.sizes.map((sizeObj) => {
+//     const discountedPrice = sizeObj.price * (1 - discount);
+//     return {
+//       size: sizeObj.size,
+//       price: discountedPrice,
+//     };
+//   });
 
-  return {
-    isNew,
-    discountedPrices,
-    discountedGeneralPrice
-  };
-}
+//   return {
+//     isNew,
+//     discountedPrices,
+//     discountedGeneralPrice
+//   };
+// }
 
 // const createProduct = async (req, res) => {
 //   try {
@@ -129,10 +129,114 @@ function calculateDiscountAndTag(product) {
 //   }
 // };
 
+
+function calculateDiscountAndTag(product) {
+  const now = new Date();
+  const productAgeInMinutes = Math.floor(
+    (now - product.createdAt) / (1000 * 60)
+  );
+
+  let isNew = productAgeInMinutes <= 2;
+  let discount = product.discountPercentage / 100; 
+
+  // Discount the general price
+  const discountedGeneralPrice = product.price * (1 - discount);
+
+  const discountedPrices = product.sizes.map((sizeObj) => {
+    const discountedPrice = sizeObj.price * (1 - discount);
+    return {
+      size: sizeObj.size,
+      price: discountedPrice,
+    };
+  });
+
+  return {
+    isNew,
+    discountedPrices,
+    discountedGeneralPrice,
+  };
+}
+
+// const createProduct = async (req, res) => {
+//   try {
+//     const { categoryId } = req.params;
+//     const { itemName, description, colors, sizes, price } = req.body;
+
+//     const theCategory = await Category.findById(categoryId);
+//     if (!theCategory) {
+//       return res.status(404).json({
+//         error: "Category not found",
+//       });
+//     }
+
+//     let imageDetails = {};
+
+//     // Handle image upload if a file is provided
+//     if (req.file) {
+//       const imageFilePath = path.resolve(req.file.path);
+
+//       if (!fs.existsSync(imageFilePath)) {
+//         return res.status(400).json({
+//           message: "Uploaded file not found",
+//         });
+//       }
+
+//       const cloudinaryUpload = await cloudinary.uploader.upload(imageFilePath, {
+//         folder: "productImages",
+//       });
+
+//       imageDetails = {
+//         public_id: cloudinaryUpload.public_id,
+//         url: cloudinaryUpload.secure_url,
+//       };
+
+//       fs.unlinkSync(imageFilePath);
+//     }
+
+//     // Parse sizes if it's a string
+//     const parsedSizes = typeof sizes === "string" ? JSON.parse(sizes) : sizes;
+
+//     // Calculate discounted prices if necessary
+//     const now = new Date();
+//     const discountedPrices = parsedSizes.map((sizeObj) => {
+//       const discountedPrice =
+//         now - Date.now() > 2 * 60 * 1000
+//           ? sizeObj.price * 0.9 // 10% discount if product is older than 2 minutes
+//           : sizeObj.price;
+
+//       return {
+//         size: sizeObj.size,
+//         price: discountedPrice,
+//       };
+//     });
+
+//     // Create the new product
+//     const newProduct = await productModel.create({
+//       itemName,
+//       description,
+//       colors,
+//       sizes: parsedSizes,
+//       price,
+//       discountedPrices,
+//       images: imageDetails,
+//       category: categoryId,
+//     });
+
+//     res.status(201).json({
+//       message: "Product created successfully",
+//       data: newProduct,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       error: "Internal Server Error: " + error.message,
+//     });
+//   }
+// };
+
 const createProduct = async (req, res) => {
   try {
     const { categoryId } = req.params;
-    const { itemName, description, colors, sizes, price } = req.body;
+    const { itemName, description, colors, sizes, price, discountPercentage } = req.body;
 
     const theCategory = await Category.findById(categoryId);
     if (!theCategory) {
@@ -168,20 +272,6 @@ const createProduct = async (req, res) => {
     // Parse sizes if it's a string
     const parsedSizes = typeof sizes === "string" ? JSON.parse(sizes) : sizes;
 
-    // Calculate discounted prices if necessary
-    const now = new Date();
-    const discountedPrices = parsedSizes.map((sizeObj) => {
-      const discountedPrice =
-        now - Date.now() > 2 * 60 * 1000
-          ? sizeObj.price * 0.9 // 10% discount if product is older than 2 minutes
-          : sizeObj.price;
-
-      return {
-        size: sizeObj.size,
-        price: discountedPrice,
-      };
-    });
-
     // Create the new product
     const newProduct = await productModel.create({
       itemName,
@@ -189,7 +279,7 @@ const createProduct = async (req, res) => {
       colors,
       sizes: parsedSizes,
       price,
-      discountedPrices,
+      discountPercentage, 
       images: imageDetails,
       category: categoryId,
     });
@@ -205,85 +295,8 @@ const createProduct = async (req, res) => {
   }
 };
 
+
 const updateProducts = async (req, res) => {
-  try {
-    const productId = req.params.productId;
-    const updates = req.body;
-
-    // Validate that updates contain at least one of the expected fields
-    const allowedUpdates = ["name", "description", "colors", "sizes"];
-    const isValidUpdate = Object.keys(updates).every((update) =>
-      allowedUpdates.includes(update)
-    );
-
-    if (!isValidUpdate) {
-      return res.status(400).json({ message: "Invalid updates!" });
-    }
-    let updatedImages = [];
-
-    // Handle image upload if a file is provided
-    if (req.file) {
-      // Path to the uploaded file
-      const imageFilePath = path.resolve(req.file.path);
-
-      // Check if the file exists before proceeding
-      if (!fs.existsSync(imageFilePath)) {
-        return res.status(400).json({
-          message: "Uploaded file not found",
-        });
-      }
-
-      // Upload the image to Cloudinary
-      const cloudinaryUpload = await cloudinary.uploader.upload(imageFilePath, {
-        folder: "productImages",
-      });
-
-      updatedImages.push(cloudinaryUpload.secure_url);
-
-      // Optionally delete the local file after upload
-      fs.unlinkSync(imageFilePath);
-    }
-
-    // Handle images to delete
-    if (image && image.length > 0) {
-      for (let imageUrl of image) {
-        // Extract public ID from the image URL
-        const publicId = imageUrl.split("/").pop().split(".")[0];
-        await cloudinary.uploader.destroy(`productImages/${publicId}`);
-      }
-    }
-
-    const updateData = { itemName, detail, price };
-    if (updatedImages.length > 0) {
-      updateData.$push = { images: { $each: updatedImages } };
-    }
-
-    const product = await Product.findById(productId);
-
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-
-    // Update the product fields
-    if (updates.name) product.name = updates.name;
-    if (updates.description) product.description = updates.description;
-    if (updates.colors) product.colors = updates.colors;
-    if (updates.sizes) product.sizes = updates.sizes;
-
-    await product.save();
-
-    return res.status(200).json({
-      message: "Product updated successfully",
-      data: product,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      message: "Internal server error: " + error.message,
-    });
-  }
-};
-
-const updateProduct = async (req, res) => {
   try {
     const productId = req.params.productId;
     const updates = req.body;
@@ -369,6 +382,97 @@ const updateProduct = async (req, res) => {
     });
   }
 };
+
+const updateProduct = async (req, res) => {
+  try {
+    const productId = req.params.productId;
+    const updates = req.body;
+    const { imagesToDelete = [] } = updates;
+
+    // Validate that updates contain at least one of the expected fields
+    const allowedUpdates = [
+      "itemName",
+      "description",
+      "price",
+      "colors",
+      "sizes",
+      "discountPercentage", 
+      "imagesToDelete",
+    ];
+    const isValidUpdate = Object.keys(updates).every((update) =>
+      allowedUpdates.includes(update)
+    );
+
+    if (!isValidUpdate) {
+      return res.status(400).json({ message: "Invalid updates!" });
+    }
+
+    let updatedImages = [];
+
+    // Handle image upload if a file is provided
+    if (req.file) {
+      const imageFilePath = path.resolve(req.file.path);
+
+      if (!fs.existsSync(imageFilePath)) {
+        return res.status(400).json({
+          message: "Uploaded file not found",
+        });
+      }
+
+      const cloudinaryUpload = await cloudinary.uploader.upload(imageFilePath, {
+        folder: "productImages",
+      });
+
+      updatedImages.push(cloudinaryUpload.secure_url);
+
+      fs.unlinkSync(imageFilePath);
+    }
+
+    const product = await productModel.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Handle images to delete
+    if (imagesToDelete.length > 0) {
+      for (let imageUrl of imagesToDelete) {
+        const publicId = imageUrl.split("/").pop().split(".")[0];
+        await cloudinary.uploader.destroy(`productImages/${publicId}`);
+
+        product.images = product.images.filter((img) => img !== imageUrl);
+      }
+    }
+
+    // Update the product fields
+    if (updates.itemName) product.itemName = updates.itemName;
+    if (updates.description) product.description = updates.description;
+    if (updates.colors) product.colors = updates.colors;
+    if (updates.sizes) product.sizes = updates.sizes;
+    if (updates.price) product.price = updates.price;
+    if (updates.discountPercentage) product.discountPercentage = updates.discountPercentage;
+    if (updatedImages.length > 0) product.images.push(...updatedImages);
+
+    // Recalculate discounted prices if discountPercentage or price is updated
+    if (updates.discountPercentage || updates.price) {
+      const { discountedPrices, discountedGeneralPrice } = calculateDiscountAndTag(product);
+      product.discountedPrices = discountedPrices;
+      product.discountedGeneralPrice = discountedGeneralPrice;
+    }
+
+    await product.save();
+
+    return res.status(200).json({
+      message: "Product updated successfully",
+      data: product,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Internal server error: " + error.message,
+    });
+  }
+};
+
 
 // const compareProducts = async (req, res) => {
 //   try {
@@ -900,16 +1004,23 @@ const getProductById = async (productId) => {
     // Calculate discount and tag
     const { isNew, discountedPrices, discountedGeneralPrice } = calculateDiscountAndTag(product);
 
-    // Update the product's discountedPrices and isNew fields
+    // Determine the label for the product
+    const label = isNew ? "new" : `-${product.discountPercentage}%`;
+
+    // Update the product's discountedPrices, isNew fields, and label
     product.discountedPrices = discountedPrices;
     product.isNew = isNew;
     product.discountedGeneralPrice = discountedGeneralPrice;
 
-    return product;
+    return {
+      ...product._doc,
+      label, 
+    };
   } catch (error) {
     throw error;
   }
 };
+
 
 // Get all products
 // const getAllProducts = async (req, res) => {
@@ -926,23 +1037,27 @@ const getAllProducts = async (req, res) => {
   try {
     const products = await productModel.find().populate("category");
 
-    
-
     // Iterate over each product and apply the discount and tag logic
     const updatedProducts = products.map((product) => {
       const { isNew, discountedPrices, discountedGeneralPrice } = calculateDiscountAndTag(product);
-      product.isNew = isNew;
-      product.discountedPrices = discountedPrices;
-      product.discountedGeneralPrice = discountedGeneralPrice;
-      
-      return product;
-     
-    });
-    
 
-    res.status(200).json({ success: true,
-      length : products.length,
-       data: updatedProducts });
+      // Determine the label for the product
+      const label = isNew ? "new" : `-${product.discountPercentage}%`;
+
+      return {
+        ...product._doc,
+        isNew,
+        discountedPrices,
+        discountedGeneralPrice,
+        label, // Add the label field
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      length: updatedProducts.length,
+      data: updatedProducts,
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -1019,6 +1134,7 @@ const sortProducts = async (req, res) => {
         });
     }
 };
+
 
 
 module.exports = {
