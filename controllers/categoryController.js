@@ -5,6 +5,11 @@ const createCategory = async (req, res) => {
   try {
     const { categoryName, categoryInfo } = req.body;
     const category = await Category.create({ categoryName, categoryInfo });
+    if (!category) {
+      return res.satus(400).json({
+        error: "Unable to find category"
+      })
+    }
     res.status(201).json({
       message: `Category added successfully`,
       data: category,
