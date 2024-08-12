@@ -18,7 +18,7 @@ const {  createProduct,
     allComments
      } = require("../controllers/productController");
 const { authenticate } = require("../middleWares/authentication");
-const {upload} = require("../middlewares/multer")
+const {upload} = require("../middleWares/multer")
 
 //endpoint to create product category
 router.post('/create-product/:categoryId', upload.array('images', 5),  createProduct);
@@ -75,6 +75,9 @@ router.get('/get-one-product/:id', async (req, res) => {
 
 //endpoint to delete product by id
 router.delete("/delete-product/:id", authenticate, deleteProduct)
+
+//sortBy to sort products
+router.get("/sort-product", sortProducts)
 
 
 module.exports = router
