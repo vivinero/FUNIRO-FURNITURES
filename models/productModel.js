@@ -85,7 +85,12 @@ const productSchema = new mongoose.Schema(
     ratings: [
       {
         userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        rating: { type: Number, min: 1, max: 5 },
+        rating: {
+          type: Number,
+          min: [1, 'Rating cannot be less than 1'],
+          max: [5, 'Rating cannot be more than 5'],
+        },
+        
       },
     ],
     averageRating: { type: Number, default: 0 },
