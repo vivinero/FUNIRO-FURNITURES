@@ -15,7 +15,8 @@ const {  createProduct,
     getProductLikes,
     rateProduct,
     commentProduct,
-    allComments
+    allComments,
+    sortProducts
      } = require("../controllers/productController");
 const { authenticate } = require("../middleWares/authentication");
 const {upload} = require("../middleWares/multer")
