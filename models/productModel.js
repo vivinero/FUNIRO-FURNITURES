@@ -63,7 +63,11 @@ const productSchema = new mongoose.Schema(
         price: Number,
       }
     ],
-    sizes: [sizeSchema], // Array of sizes with prices
+    discountPercentage: {
+      type: Number,
+      default: 0, // Default to 0% discount
+    },
+    sizes: [sizeSchema], 
     category: {
       type: mongoose.SchemaTypes.ObjectId,
       ref: "Category",
@@ -81,7 +85,12 @@ const productSchema = new mongoose.Schema(
     ratings: [
       {
         userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        rating: { type: Number, min: 1, max: 5 },
+        rating: {
+          type: Number,
+          min: [1, 'Rating cannot be less than 1'],
+          max: [5, 'Rating cannot be more than 5'],
+        },
+        
       },
     ],
     averageRating: { type: Number, default: 0 },

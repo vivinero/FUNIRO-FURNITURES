@@ -6,6 +6,7 @@ const productRouter = require("./routers/productRouter")
 const cartRouter = require("./routers/cartRouter")
 const filterRouter = require('./routers/filterRouter.js')
 const contactUsRouter = require('./routers/contactUsRouter.js')
+const blog = require("./routers/blogRouter.js")
 const cors = require('cors');
 
 
@@ -16,6 +17,7 @@ app.use(express.json())
 app.use(userRouter)
 app.use(categoryRouter)
 app.use(productRouter)
+app.use(blog)
 
 // Middleware for CORS
 app.use(cors("*"))
