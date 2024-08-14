@@ -56,7 +56,7 @@ function calculateDiscountAndTag(product) {
   };
 }
 
-
+//Function to create a product
 const createProduct = async (req, res) => {
   try {
     const { categoryId } = req.params;
@@ -289,7 +289,7 @@ const createProductS = async (req, res) => {
   }
 };
 
-
+//Function to update a product
 const updateProduct = async (req, res) => {
   try {
     const productId = req.params.productId;
@@ -389,7 +389,7 @@ const updateProduct = async (req, res) => {
   }
 };
 
-
+//Function to compare two products
 const compareProducts = async (req, res) => {
   try {
     const { productIds } = req.body;
@@ -438,6 +438,7 @@ const compareProducts = async (req, res) => {
   }
 };
 
+//Function to generate urls to share a product
 const generateShareUrls = (product) => {
   const encodedProductName = encodeURIComponent(product.itemName);
   const encodedProductUrl = encodeURIComponent(
@@ -480,6 +481,7 @@ const shareProduct = async (req, res) => {
   }
 };
 
+//Function to like and unlike a product
 const toggleLikeProduct = async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -529,7 +531,7 @@ const toggleLikeProduct = async (req, res) => {
     });
   }
 };
-
+//Function to fetch all likes on a product
 const getProductLikes = async (req, res) => {
   try {
     const { id } = req.params; // Product ID
@@ -558,6 +560,7 @@ const getProductLikes = async (req, res) => {
   }
 };
 
+//Function to rate a product
 const rateProduct = async (req, res) => {
   try {
     const { productId } = req.params;
@@ -619,6 +622,7 @@ const rateProduct = async (req, res) => {
   }
 };
 
+//Function to comment on a product
 const commentProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -671,6 +675,7 @@ const commentProduct = async (req, res) => {
   }
 };
 
+//Function to get all commnets on a product
 const allComments = async (req, res) => {
   try {
     const { id } = req.params;
@@ -702,7 +707,7 @@ const allComments = async (req, res) => {
   }
 };
 
-//End point to update prices and sizes
+//Function to update prices and sizes
 const updateSize = async (req, res) => {
   try {
     const productId = req.params.productId;
@@ -741,6 +746,7 @@ const updateSize = async (req, res) => {
   }
 };
 
+//Function to delete size
 const deleteSize = async (req, res) => {
   try {
     const productId = req.params.productId;
@@ -768,7 +774,7 @@ const deleteSize = async (req, res) => {
   }
 };
 
-//Endpoint to update colour
+//Function to update colour
 const updateColor = async (req, res) => {
   try {
     const productId = req.params.productId;
@@ -801,7 +807,7 @@ const updateColor = async (req, res) => {
   }
 };
 
-//Endpoint to delete color
+//Function to delete color
 const deleteColor = async (req, res) => {
   try {
     const productId = req.params.productId;
@@ -853,7 +859,7 @@ const deleteProduct = async (req, res) => {
   }
 };
 
-
+//Function to get a product by Id
 const getProductById = async (productId) => {
   try {
     const product = await productModel.findById(productId).populate("category");
@@ -902,7 +908,7 @@ const getAllProducts = async (req, res) => {
         isNew,
         discountedPrices,
         discountedGeneralPrice,
-        label, // Add the label field
+        label, 
       };
     });
 

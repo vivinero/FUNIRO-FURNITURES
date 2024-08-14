@@ -3,6 +3,7 @@ const productModel = require("../models/productModel");
 const userModel = require("../models/userModel");
 const orderModel = require("../models/orderModel");
 
+
 const addToCart = async (req, res) => {
   try {
     const { userId, productId } = req.params;
@@ -123,11 +124,9 @@ const updateCart = async (req, res) => {
     );
 
     if (!item) {
-      return res
-        .status(400)
-        .json({
-          message: "Product with the specified size not found in cart.",
-        });
+      return res.status(400).json({
+        message: "Product with the specified size not found in cart.",
+      });
     }
 
     // Determine the price to use: regular or discounted
@@ -162,65 +161,6 @@ const updateCart = async (req, res) => {
     // Update the quantity and subtotal of the existing item
     item.quantity = quantity;
     item.sub_total = price * item.quantity;
-
-    // Recalculate the total price of the cart
-    cart.total = cart.products.reduce((acc, item) => acc + item.sub_total, 0);
-
-    // Save the updated cart to the database
-    await cart.save();
-
-    // Respond with success message and updated cart data
-    res.status(200).json({ message: "Cart updated successfully.", data: cart });
-  } catch (err) {
-    // Handle any errors that occur during the process
-    res.status(500).json({ message: `Error updating cart: ${err.message}` });
-  }
-};
-
-const updateCarts = async (req, res) => {
-  try {
-    // Extract userId and productId from request parameters
-    const { userId, productId } = req.params;
-    const { size, quantity } = req.body;
-
-    // Find the user by ID
-    const user = await userModel.findById(userId);
-    if (!user) {
-      return res.status(400).json({ message: "User does not exist." });
-    }
-
-    // Find the product by ID
-    const product = await productModel.findById(productId);
-    if (!product) {
-      return res.status(400).json({ message: "Product not found." });
-    }
-
-    // Find the user's cart
-    let cart = await cartModel.findOne({ userId: userId });
-    if (!cart) {
-      console.log("Cart not found for user:", userId);
-      return res.status(400).json({ message: "Cart not found." });
-    }
-
-    console.log("Cart found:", cart);
-
-    // Find the product in the cart with the same size
-    const item = cart.products.find(
-      (item) => item.productId.equals(productId) && item.size === size
-    );
-
-    if (!item) {
-      return res
-        .status(400)
-        .json({
-          message: "Product with the specified size not found in cart.",
-        });
-    }
-
-    // Update the quantity and subtotal of the existing item
-    item.quantity = quantity;
-    const sizeDetails = product.sizes.find((s) => s.size === size);
-    item.sub_total = sizeDetails.price * item.quantity;
 
     // Recalculate the total price of the cart
     cart.total = cart.products.reduce((acc, item) => acc + item.sub_total, 0);
@@ -291,43 +231,6 @@ const removeFromCart = async (req, res) => {
   }
 };
 
-const viewCarts = async (req, res) => {
-  try {
-    const { userId } = req.params;
-
-    // Find the user's cart
-    const cart = await cartModel.findOne({ userId: userId }).populate({
-      path: "products.productId",
-      select: "itemName description productImage", // Select only the necessary fields
-    });
-
-    if (!cart) {
-      return res.status(404).json({ message: "Cart not found." });
-    }
-
-    // Format the cart products to include the necessary product details
-    const formattedCart = {
-      ...cart.toObject(),
-      products: cart.products.map((item) => ({
-        productId: item.productId._id,
-        productName: item.productId.itemName,
-        description: item.productId.description,
-        productImage: item.productId.productImage,
-        size: item.size,
-        quantity: item.quantity,
-        price: item.price,
-        sub_total: item.sub_total,
-      })),
-    };
-
-    res
-      .status(200)
-      .json({ message: "Cart retrieved successfully.", data: formattedCart });
-  } catch (err) {
-    res.status(500).json({ message: `Error retrieving cart: ${err.message}` });
-  }
-};
-
 const viewCart = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -386,45 +289,6 @@ const deleteCart = async (req, res) => {
     res
       .status(500)
       .json({ message: `Error removing from cart: ${err.message}` });
-  }
-};
-
-const checkouts = async (req, res) => {
-  try {
-    const { userId } = req.params;
-
-    // Find the user's cart
-    let cart = await cartModel.findOne({ userId: userId });
-
-    if (!cart || cart.products.length === 0) {
-      return res.status(400).json({ message: "Your cart is empty." });
-    }
-
-    // Process the checkout: Create an order
-    const order = new orderModel({
-      userId: userId,
-      products: cart.products,
-      total: cart.total,
-    });
-
-    // Save the order to the database
-    await order.save();
-
-    // Clear the cart
-    cart.products = [];
-    cart.total = 0;
-    await cart.save();
-
-    return res
-      .status(200)
-      .json({
-        message: "Checkout successful. Your cart has been cleared.",
-        order,
-      });
-  } catch (err) {
-    return res
-      .status(500)
-      .json({ message: `Error during checkout: ${err.message}` });
   }
 };
 
@@ -487,6 +351,7 @@ const checkout = async (req, res) => {
       userId: userId,
       products: orderProducts,
       total: cart.total,
+      userName: `${user.firstName} ${user.lastName}`,
     });
 
     // Save the order to the database
@@ -497,19 +362,18 @@ const checkout = async (req, res) => {
     cart.total = 0;
     await cart.save();
 
-    return res
-      .status(200)
-      .json({
-        message: "Checkout successful. Your cart has been cleared.",
-        order,
-        userName: `${user.firstName} ${user.lastName}`
-      });
+    return res.status(200).json({
+      message: "Checkout successful. Your cart has been cleared.",
+      order,
+    });
   } catch (err) {
     return res
       .status(500)
       .json({ message: `Error during checkout: ${err.message}` });
   }
 };
+
+
 
 module.exports = {
   addToCart,

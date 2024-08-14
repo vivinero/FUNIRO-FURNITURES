@@ -12,7 +12,8 @@ const orderSchema = new mongoose.Schema({
   }],
   total: { type: Number, required: true },
   orderDate: { type: Date, default: Date.now },
-  status: { type: String, default: 'Pending' } 
+  status: { type: String, default: 'Pending' } ,
+  userName: {type:String}
 });
 
 
