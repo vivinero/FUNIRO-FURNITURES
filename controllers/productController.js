@@ -390,48 +390,6 @@ const updateProduct = async (req, res) => {
 };
 
 
-// const compareProducts = async (req, res) => {
-//   try {
-//     const { productIds } = req.body;
-
-//     if (!productIds || productIds.length < 2) {
-//       return res.status(400).json({
-//         message: "Please provide at least two product IDs to compare.",
-//       });
-//     }
-
-//     // Fetch products from the database
-//     const products = await productModel.find({ _id: { $in: productIds } });
-
-//     if (products.length !== productIds.length) {
-//       return res
-//         .status(404)
-//         .json({ message: "One or more products not found." });
-//     }
-
-//     // Extract relevant attributes for comparison
-//     const comparisonResult = products.map((product) => ({
-//       itemName: product.itemName,
-//       price: product.price,
-//       description: product.description,
-//       colors: product.colors,
-//       sizes: product.sizes,
-//       // Add any other attributes you want to compare
-//     }));
-
-//     res.status(200).json({
-//       message: "Products compared successfully",
-//       comparisonResult,
-//     });
-//   } catch (error) {
-//     res.status(500).json({
-//       message: "Internal Server Error: " + error.message,
-//     });
-//   }
-// };
-
-//Function to generate share URL
-
 const compareProducts = async (req, res) => {
   try {
     const { productIds } = req.body;
@@ -895,27 +853,6 @@ const deleteProduct = async (req, res) => {
   }
 };
 
-// Get a product by ID
-// const getProductById = async (req, res) => {
-//   try {
-//     const userId = req.user.userId;
-//     const { id } = req.params;
-//     const product = await productModel.findById(id).populate("Category");
-//     if (!product) {
-//       return res.status(404).json({
-//         error: "Product not found",
-//       });
-//     }
-//     res.status(200).json({
-//       message: `Product fetched`,
-//       data: product,
-//     });
-//   } catch (error) {
-//     res.status(500).json({
-//       error: error.message,
-//     });
-//   }
-// };
 
 const getProductById = async (productId) => {
   try {
@@ -947,15 +884,6 @@ const getProductById = async (productId) => {
 };
 
 // Get all products
-// const getAllProducts = async (req, res) => {
-//   try {
-//     const userId = req.user.userId;
-//     const products = await productModel.find().populate("Category");
-//     res.status(200).json({ success: true, data: products });
-//   } catch (error) {
-//     res.status(500).json({ success: false, error: error.message });
-//   }
-// };
 
 const getAllProducts = async (req, res) => {
   try {
