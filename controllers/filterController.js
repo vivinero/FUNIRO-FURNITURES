@@ -12,7 +12,7 @@ const filterProduct = async(req, res) =>{
         let categoryFilter = {};
 
         if(productName) {
-          productFilter.productName = new Regexp(productName, 'i')
+          productFilter.productName = new RegExp(productName, 'i')
         }
 
         if(categoryName) {
