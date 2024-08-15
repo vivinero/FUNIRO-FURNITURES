@@ -10,6 +10,7 @@ const categorySchema = new mongoose.Schema({
     admin:{
         type: String,
     },
+    images:{type:Array}, 
     products: [{
         type: mongoose.SchemaTypes.ObjectId,
             ref: "Product"
