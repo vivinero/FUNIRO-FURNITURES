@@ -1,6 +1,6 @@
 const userRouter = require("express").Router()
 const {authenticate} = require("../middleWares/authentication")
-const userValidation = require('../middleWares/userValidation')
+const {userValidation} = require('../middleWares/userValidation')
 const {signUp, logIn, signOut, getOneUser, sendOTP, verifyOTP} = require("../controllers/userControls")
 
 userRouter.post('/sign-up', userValidation,signUp)
