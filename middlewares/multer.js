@@ -31,7 +31,7 @@ const upload = multer({
     storage,
     fileFilter,
     limits: { fileSize: fileSize }
-});
+})
 
 module.exports = { upload };
 
