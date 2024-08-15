@@ -1,6 +1,9 @@
 const productModel = require("../models/productModel");
 const Category = require("../models/categoryModel");
 const cloudinary = require("../middlewares/cloudinary");
+const {validateComment,
+  validateRating
+} = require ("../middleWares/userValidation")
 
 const fs = require("fs");
 const path = require("path");
@@ -563,6 +566,11 @@ const getProductLikes = async (req, res) => {
 //Function to rate a product
 const rateProduct = async (req, res) => {
   try {
+    const { error, value } = validateRating(req.body);
+
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
     const { productId } = req.params;
     const { rating } = req.body;
     const userId = req.user.userId;
@@ -623,8 +631,15 @@ const rateProduct = async (req, res) => {
 };
 
 //Function to comment on a product
+
 const commentProduct = async (req, res) => {
   try {
+    const { error, value } = validateComment(req.body);
+
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
     const { id } = req.params;
     const { comment } = req.body;
     const userId = req.user.userId;
@@ -674,6 +689,7 @@ const commentProduct = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error: " + error.message });
   }
 };
+
 
 //Function to get all commnets on a product
 const allComments = async (req, res) => {

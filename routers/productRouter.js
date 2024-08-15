@@ -21,6 +21,7 @@ const {  createProduct,
 const { authenticate } = require("../middleWares/authentication");
 const {upload} = require("../middleWares/multer")
 
+
 //endpoint to create product category
 router.post('/create-product/:categoryId', upload.array('images', 5),  createProduct);
 
@@ -37,7 +38,7 @@ router.post('/product/:id/like', authenticate, toggleLikeProduct);
 router.get('/product/:id/likes', getProductLikes);
 
 //endpoint to rate product
- router.post ("/product/:productId/rate", authenticate, rateProduct)
+ router.post ("/product/:productId/rate", authenticate,  rateProduct)
 
  //endpoint to make comment
  router.post('/product/:id/comment', authenticate, commentProduct)
