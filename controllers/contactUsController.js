@@ -47,6 +47,8 @@
 const contactUsModel = require('../models/contactUsModel.js');
 const sendEmail = require('../helpers/sendMail.js');
 
+const MERCHANT_EMAIL = docmate24@gmail.com
+
 const contactUs = async (req, res) => {
   const { yourName, emailAddress, subject, message } = req.body;
 
@@ -58,14 +60,14 @@ const contactUs = async (req, res) => {
   // Email to merchant
   const mailOptionsToMerchant = {
     from: emailAddress,
-    to: process.env.MERCHANT_EMAIL, // Ensure this is defined in your .env
+    to: MERCHANT_EMAIL, 
     subject: `Contact Us Message: ${subject}`,
     text: `You have received a new message from ${yourName} (${emailAddress}):\n\n${message}`,
   };
 
   // Confirmation email to user
   const mailOptionsToUser = {
-    from: process.env.MERCHANT_EMAIL, // Ensure this is defined in your .env
+    from: MERCHANT_EMAIL, 
     to: emailAddress,
     subject: 'Thank You For Contacting Us',
     text: `Hi ${yourName},\n\nThank you for reaching out to us. We have received your message and will get back to you shortly.\n\nBest regards,\nFuniro-Funitures`,
