@@ -1,34 +1,44 @@
 const productModel = require('../models/productModel.js');
 const categoryModel = require('../models/categoryModel.js');
 
+const filterProduct = async (req, res) => {
+    try {
+        // Extract the query parameters
+        const { productName, categoryName } = req.query;
 
-const filterProduct = async(req, res) =>{
-    try{
-        // extract the query parameter
-        const {productName, categoryName} = req.query
+        // Log the query parameters for debugging
+        console.log('Query Parameters:', { productName, categoryName });
 
-        // build the filter object for both product and category
+        // Initialize an empty result object
+        const result = {};
+
+        // Build the filter object for products
         let productFilter = {};
-        let categoryFilter = {};
-
-        if(productName) {
-          productFilter.productName = new Regexp(productName, 'i')
+        if (productName) {
+            productFilter.itemName = new RegExp(productName, 'i'); // Correct key 'itemName'
         }
 
-        if(categoryName) {
-          categoryFilter.categoryName = new RegExp(categoryName, 'i')
-          }
-               // Find products and categories based on the filters
-          const product = await productModel.find(productFilter)
-          const category = await categoryModel.find(categoryFilter)
-          
-        //   send the fikltered result as response
-        res.json({product,category})
+        // Build the filter object for categories
+        let categoryFilter = {};
+        if (categoryName) {
+            categoryFilter.categoryName = new RegExp(categoryName, 'i');
+        }
 
-    }catch(err){
-     res.status(500).json({error:err.message})
+        // Find products based on the filter if productName is provided
+        if (productName) {
+            result.products = await productModel.find(productFilter);
+        }
 
+        // Find categories based on the filter if categoryName is provided
+        if (categoryName) {
+            result.categories = await categoryModel.find(categoryFilter);
+        }
+
+        // Send the filtered result as a response
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
-}
+};
 
 module.exports = filterProduct;
