@@ -16,7 +16,10 @@ const {  createProduct,
     rateProduct,
     commentProduct,
     allComments,
-    sortProducts
+    sortProducts,
+    updateStock,
+    getAllStock,
+    getProductStock
      } = require("../controllers/productController");
 const { authenticate } = require("../middleWares/authentication");
 const {upload} = require("../middleWares/multer")
@@ -27,6 +30,15 @@ router.post('/create-product/:categoryId', upload.array('images', 5),  createPro
 
 //endpoint to update product 
 router.put('/update-product/:productId', upload.array('images', 5), updateProduct);
+
+//endpoint to update stock 
+router.put('/update-stock/:productId',  updateStock);
+
+//endpoint to get all stocks
+router.get('/stocks', getAllStock);
+
+//endpoint to get a stock for one product
+router.get('/stock/:productId', getProductStock);
 
 //endpoint to share product
 router.get('/share/:productId', shareProduct)

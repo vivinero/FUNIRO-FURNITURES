@@ -140,6 +140,10 @@ const sizeSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  stock: {
+    type: Number,
+    required: true, 
+  },
   images: 
     {
       type:Array
@@ -169,9 +173,18 @@ const productSchema = new mongoose.Schema(
       type: Array
     },
     colors: {
-      type: [String], 
+      type: Array, 
       required: true,
     },
+    stock: {
+      type: Number,
+      //required: true
+      required: function () {
+        // Stock is only required when there are no sizes defined
+        return this.sizes.length === 0;
+      },
+    },
+  
     createdAt: {
       type: Date,
       default: Date.now,
@@ -186,7 +199,8 @@ const productSchema = new mongoose.Schema(
       type: Number,
       default: 0, // Default to 0% discount
     },
-    sizes: [sizeSchema], // Schema for different sizes, including their images
+    sizes: [sizeSchema], // Schema for different sizes
+    
     category: {
       type: mongoose.SchemaTypes.ObjectId,
       ref: "Category",
