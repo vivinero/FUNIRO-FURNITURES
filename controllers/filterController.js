@@ -15,7 +15,7 @@ const filterProduct = async (req, res) => {
         // Build the filter object for products
         let productFilter = {};
         if (productName) {
-            productFilter.itemName = new RegExp(productName, 'i'); // Correct key 'itemName'
+            productFilter.itemName = new RegExp(productName, 'i'); 
         }
 
         // Build the filter object for categories
