@@ -1,9 +1,10 @@
 const productModel = require("../models/productModel");
 const Category = require("../models/categoryModel");
 const cloudinary = require("../middlewares/cloudinary");
-const {validateComment,
-  validateRating
-} = require ("../middleWares/userValidation")
+const {
+  validateComment,
+  validateRating,
+} = require("../middleWares/userValidation");
 
 const fs = require("fs");
 const path = require("path");
@@ -31,7 +32,6 @@ const path = require("path");
 //   };
 // }
 
-
 function calculateDiscountAndTag(product) {
   const now = new Date();
   const productAgeInMinutes = Math.floor(
@@ -58,7 +58,6 @@ function calculateDiscountAndTag(product) {
     discountedGeneralPrice,
   };
 }
-
 //Function to create a product
 const createProduct = async (req, res) => {
   try {
@@ -69,12 +68,149 @@ const createProduct = async (req, res) => {
       colors,
       sizes,
       price,
+      stock,
+      discountPercentage = 0,
+    } = req.body;
+
+    console.log("Received stock value:", stock); // Log the stock value
+
+    const theCategory = await Category.findById(categoryId);
+    if (!theCategory) {
+      return res.status(404).json({ error: "Category not found" });
+    }
+
+    // Ensure stock is provided for products without sizes
+    if (!sizes && (stock === undefined || stock < 0)) {
+      return res
+        .status(400)
+        .json({
+          message: "Stock quantity is required for products without sizes",
+        });
+    }
+
+    // Parse sizes if it's a string and if it's provided
+    const parsedSizes = sizes
+      ? typeof sizes === "string"
+        ? JSON.parse(sizes)
+        : sizes
+      : [];
+
+    // Ensure stock is provided for each size
+    if (parsedSizes.length > 0) {
+      for (const size of parsedSizes) {
+        if (size.stock === undefined || size.stock < 0) {
+          return res
+            .status(400)
+            .json({
+              message: `Stock quantity is required for size ${size.size}`,
+            });
+        }
+      }
+    }
+
+    // Check if files are uploaded
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        message: "No files were uploaded",
+      });
+    }
+
+    const filePaths = req.files.map((file) => path.resolve(file.path));
+
+    // Check if all files exist
+    const allFilesExist = filePaths.every((filePath) =>
+      fs.existsSync(filePath)
+    );
+
+    if (!allFilesExist) {
+      return res.status(400).json({
+        message: "One or more uploaded images not found",
+      });
+    }
+
+    // Upload the images to Cloudinary and collect the results
+    const cloudinaryUploads = await Promise.all(
+      filePaths.map((filePath) =>
+        cloudinary.uploader.upload(filePath, {
+          folder: "Product-Images",
+        })
+      )
+    );
+
+    // Calculate discounted prices only if sizes are provided
+    let discountedPrices = [];
+    if (parsedSizes.length > 0) {
+      discountedPrices = parsedSizes.map((sizeObj) => {
+        const discountedPrice = sizeObj.price * (1 - discountPercentage / 100);
+        return {
+          size: sizeObj.size,
+          price: discountedPrice,
+          stock: sizeObj.stock, // Include stock for each size
+        };
+      });
+    }
+
+    // Create the new product with or without sizes
+    const newProduct = await productModel.create({
+      itemName,
+      description,
+      colors,
+      price,
+      discountPercentage,
+      discountedPrices,
+      sizes: parsedSizes, // Store the sizes with stock included
+      images: cloudinaryUploads.map((upload) => ({
+        public_id: upload.public_id,
+        url: upload.secure_url,
+      })),
+      // stock: parsedSizes.length > 0 ? undefined : stock,
+      stock: sizes && sizes.length > 0 ? 0 : stock, // Handle general stock if no sizes
+
+      category: categoryId,
+    });
+
+    await newProduct.save();
+
+    res.status(201).json({
+      message: "Product created successfully",
+      data: newProduct,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: "Internal Server Error: " + error.message,
+    });
+  } finally {
+    // Cleanup the uploaded files
+    req.files.forEach((file) => {
+      const filePath = path.resolve(file.path);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    });
+  }
+};
+
+const createProductss = async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    const {
+      itemName,
+      description,
+      colors,
+      sizes,
+      price,
+      stock,
       discountPercentage = 0,
     } = req.body;
 
     const theCategory = await Category.findById(categoryId);
     if (!theCategory) {
       return res.status(404).json({ error: "Category not found" });
+    }
+
+    // Ensure stock is provided for products without sizes
+    if (!sizes && (stock === undefined || stock < 0)) {
+      return res.status(400).json({ message: "Stock quantity is required" });
     }
 
     // Check if files are uploaded
@@ -138,136 +274,7 @@ const createProduct = async (req, res) => {
         public_id: upload.public_id,
         url: upload.secure_url,
       })),
-      category: categoryId,
-    });
-
-    await newProduct.save();
-
-    res.status(201).json({
-      message: "Product created successfully",
-      data: newProduct,
-    });
-  } catch (error) {
-    res.status(500).json({
-      error: "Internal Server Error: " + error.message,
-    });
-  } finally {
-    // Cleanup the uploaded files
-    req.files.forEach((file) => {
-      const filePath = path.resolve(file.path);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-    });
-  }
-};
-
-const createProductS = async (req, res) => {
-  try {
-    const { categoryId } = req.params;
-    const {
-      itemName,
-      description,
-      colors,
-      sizes,
-      price,
-      discountPercentage = 0,
-    } = req.body;
-
-    const theCategory = await Category.findById(categoryId);
-    if (!theCategory) {
-      return res.status(404).json({ error: "Category not found" });
-    }
-
-    // Check if files are uploaded
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({
-        message: "No files were uploaded",
-      });
-    }
-
-    const filePaths = req.files.map((file) => path.resolve(file.path));
-
-    // Check if all files exist
-    const allFilesExist = filePaths.every((filePath) =>
-      fs.existsSync(filePath)
-    );
-
-    if (!allFilesExist) {
-      return res.status(400).json({
-        message: "One or more uploaded images not found",
-      });
-    }
-
-    // Upload the images to Cloudinary and collect the results
-    const cloudinaryUploads = await Promise.all(
-      filePaths.map((filePath) =>
-        cloudinary.uploader.upload(filePath, {
-          folder: "Product-Images",
-        })
-      )
-    );
-
-    // Parse sizes if it's a string and if it's provided
-    const parsedSizes = sizes
-      ? typeof sizes === "string"
-        ? JSON.parse(sizes)
-        : sizes
-      : [];
-
-    let sizeImageMap = {};
-    let generalImages = [];
-
-    // Separate general images and size-specific images
-    cloudinaryUploads.forEach((upload, index) => {
-      const fileFieldName = req.files[index].fieldname;
-      const sizeMatch = fileFieldName.match(/size-(\w+)/); // Assuming field names like "size-M", "size-L"
-      
-      if (sizeMatch) {
-        const size = sizeMatch[1];
-        if (!sizeImageMap[size]) {
-          sizeImageMap[size] = [];
-        }
-        sizeImageMap[size].push({
-          public_id: upload.public_id,
-          url: upload.secure_url,
-        });
-      } else {
-        generalImages.push({
-          public_id: upload.public_id,
-          url: upload.secure_url,
-        });
-      }
-    });
-
-    // Map the size images back to the corresponding size objects
-    const updatedSizes = parsedSizes.map((sizeObj) => ({
-      ...sizeObj,
-      images: sizeImageMap[sizeObj.size] || [],
-    }));
-
-    // Calculate discounted prices only if sizes are provided
-    let discountedPrices = [];
-    if (updatedSizes.length > 0) {
-      discountedPrices = updatedSizes.map((sizeObj) => {
-        const discountedPrice = price * (1 - discountPercentage / 100);
-        return {
-          size: sizeObj.size,
-          price: discountedPrice,
-        };
-      });
-    }
-
-    // Create the new product with or without sizes
-    const newProduct = await productModel.create({
-      itemName,
-      description,
-      colors,
-      price,
-      discountPercentage,
-      discountedPrices,
-      sizes: updatedSizes,
-      images: generalImages, // Store the general images separately
+      stock,
       category: categoryId,
     });
 
@@ -296,7 +303,14 @@ const createProductS = async (req, res) => {
 const updateProduct = async (req, res) => {
   try {
     const productId = req.params.productId;
-    const { itemName, description, colors, sizes, price, discountPercentage = 0 } = req.body;
+    const {
+      itemName,
+      description,
+      colors,
+      sizes,
+      price,
+      discountPercentage = 0,
+    } = req.body;
 
     const product = await productModel.findById(productId);
 
@@ -308,18 +322,22 @@ const updateProduct = async (req, res) => {
     let newImages = [];
 
     if (req.files && req.files.length > 0) {
-      const filePaths = req.files.map(file => path.resolve(file.path));
+      const filePaths = req.files.map((file) => path.resolve(file.path));
 
       // Check if all files exist
-      const allFilesExist = filePaths.every(filePath => fs.existsSync(filePath));
+      const allFilesExist = filePaths.every((filePath) =>
+        fs.existsSync(filePath)
+      );
 
       if (!allFilesExist) {
-        return res.status(400).json({ message: "One or more uploaded images not found" });
+        return res
+          .status(400)
+          .json({ message: "One or more uploaded images not found" });
       }
 
       // Upload the images to Cloudinary
       const cloudinaryUploads = await Promise.all(
-        filePaths.map(filePath =>
+        filePaths.map((filePath) =>
           cloudinary.uploader.upload(filePath, {
             folder: "Product-Images",
           })
@@ -327,7 +345,7 @@ const updateProduct = async (req, res) => {
       );
 
       // Store new images
-      newImages = cloudinaryUploads.map(upload => ({
+      newImages = cloudinaryUploads.map((upload) => ({
         public_id: upload.public_id,
         url: upload.secure_url,
       }));
@@ -348,7 +366,8 @@ const updateProduct = async (req, res) => {
     if (itemName) product.itemName = itemName;
     if (description) product.description = description;
     if (colors) product.colors = colors;
-    if (sizes) product.sizes = typeof sizes === "string" ? JSON.parse(sizes) : sizes;
+    if (sizes)
+      product.sizes = typeof sizes === "string" ? JSON.parse(sizes) : sizes;
     if (price) product.price = price;
     if (discountPercentage) product.discountPercentage = discountPercentage;
 
@@ -357,8 +376,9 @@ const updateProduct = async (req, res) => {
       const parsedSizes = typeof sizes === "string" ? JSON.parse(sizes) : sizes;
 
       if (parsedSizes && parsedSizes.length > 0) {
-        product.discountedPrices = parsedSizes.map(sizeObj => {
-          const discountedPrice = product.price * (1 - product.discountPercentage / 100);
+        product.discountedPrices = parsedSizes.map((sizeObj) => {
+          const discountedPrice =
+            product.price * (1 - product.discountPercentage / 100);
           return {
             size: sizeObj.size,
             price: discountedPrice,
@@ -382,7 +402,7 @@ const updateProduct = async (req, res) => {
   } finally {
     // Cleanup the uploaded files
     if (req.files) {
-      req.files.forEach(file => {
+      req.files.forEach((file) => {
         const filePath = path.resolve(file.path);
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath);
@@ -391,6 +411,188 @@ const updateProduct = async (req, res) => {
     }
   }
 };
+
+const updateStock = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const { size, stock } = req.body;
+
+    // Find the product by ID
+    const product = await productModel.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found." });
+    }
+
+    if (product.sizes && product.sizes.length > 0) {
+      // Update stock for a specific size
+      const sizeIndex = product.sizes.findIndex((s) => s.size === size);
+
+      if (sizeIndex !== -1) {
+        product.sizes[sizeIndex].stock = stock;
+      } else {
+        return res.status(400).json({ message: `Size ${size} not found.` });
+      }
+    } else {
+      // Update general stock for products without sizes
+      product.stock = stock;
+    }
+
+    await product.save();
+
+    res.status(200).json({
+      message: "Stock updated successfully.",
+      data: product,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const getProductStockS = async (req, res) => {
+  try {
+    const { productId } = req.params;
+
+    // Find the product by ID
+    const product = await productModel
+      .findById(productId)
+      .select("itemName stock sizes");
+    if (!product) {
+      return res.status(400).json({ message: "Product not found." });
+    }
+
+    // If the product has sizes, return the stock for each size
+    if (product.sizes && product.sizes.length > 0) {
+      const sizeStock = product.sizes.map((sizeDetail) => ({
+        size: sizeDetail.size,
+        stock: sizeDetail.stock,
+      }));
+
+      return res.status(200).json({
+        productName: product.itemName,
+        sizeStock: sizeStock,
+      });
+    }
+
+    // If no sizes, return the general stock
+    return res.status(200).json({
+      productName: product.itemName,
+      stock: product.stock,
+    });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: `Error fetching product stock: ${err.message}` });
+  }
+};
+
+const getProductStock = async (req, res) => {
+  try {
+    const { productId } = req.params;
+
+    // Find the product by ID
+    const product = await productModel.findById(productId).select('itemName stock sizes colors');
+    if (!product) {
+      return res.status(400).json({ message: "Product not found." });
+    }
+
+    // If the product has sizes, return the stock and colors for each size
+    if (product.sizes && product.sizes.length > 0) {
+      const sizeStock = product.sizes.map((sizeDetail) => ({
+        size: sizeDetail.size,
+        stock: sizeDetail.stock,
+        colors: sizeDetail.colors || [],  // Return available colors for each size
+      }));
+      
+      return res.status(200).json({
+        productName: product.itemName,
+        sizeStock: sizeStock,
+      });
+    }
+
+    // If no sizes, return the general stock and colors
+    return res.status(200).json({
+      productName: product.itemName,
+      stock: product.stock,
+      colors: product.colors || [],  // Return available colors for the general product
+    });
+  } catch (err) {
+    res.status(500).json({ message: `Error fetching product stock: ${err.message}` });
+  }
+};
+
+const getAllStock = async (req, res) => {
+  try {
+    // Fetch all products with necessary fields
+    const products = await productModel.find().select('itemName stock sizes colors');
+
+    // Map through each product and structure the response
+    const productStocks = products.map(product => {
+      if (product.sizes && product.sizes.length > 0) {
+        // If the product has sizes, return stock and colors for each size
+        const sizeStock = product.sizes.map(sizeDetail => ({
+          size: sizeDetail.size,
+          stock: sizeDetail.stock,
+          colors: sizeDetail.colors || [],  // Return available colors for each size
+        }));
+
+        return {
+          productName: product.itemName,
+          sizeStock: sizeStock,
+        };
+      }
+
+      // If no sizes, return the general stock and colors
+      return {
+        productName: product.itemName,
+        stock: product.stock,
+        colors: product.colors || [],  // Return available colors for the general product
+      };
+    });
+
+    // Send response with all product stock details
+    return res.status(200).json({ products: productStocks });
+  } catch (err) {
+    return res.status(500).json({ message: `Error fetching all product stocks: ${err.message}` });
+  }
+};
+
+
+const getAllStocks = async (req, res) => {
+  try {
+    // Fetch all products from the database
+    const products = await productModel.find().select("itemName stock sizes");
+
+    // Initialize an array to hold the stock details
+    const stockDetails = products.map((product) => {
+      let totalStock = product.stock || 0; // Initialize with general stock
+
+      // If the product has sizes, calculate the total stock across all sizes
+      if (product.sizes && product.sizes.length > 0) {
+        totalStock = product.sizes.reduce(
+          (sum, size) => sum + (size.stock || 0),
+          0
+        );
+      }
+
+      return {
+        productName: product.itemName,
+        totalStock: totalStock,
+      };
+    });
+
+    // Respond with the stock details
+    res.status(200).json({
+      message: "Stock details fetched successfully.",
+      data: stockDetails,
+    });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: `Error fetching stock details: ${err.message}` });
+  }
+};
+
 
 //Function to compare two products
 const compareProducts = async (req, res) => {
@@ -421,12 +623,12 @@ const compareProducts = async (req, res) => {
       return {
         itemName: product.itemName,
         price: product.price,
-        discountedGeneralPrice: discountedGeneralPrice, 
+        discountedGeneralPrice: discountedGeneralPrice,
         description: product.description,
         colors: product.colors,
         sizes: product.sizes,
-        discountedPrices: discountedPrices, 
-        isNew: isNew, 
+        discountedPrices: discountedPrices,
+        isNew: isNew,
       };
     });
 
@@ -534,6 +736,7 @@ const toggleLikeProduct = async (req, res) => {
     });
   }
 };
+
 //Function to fetch all likes on a product
 const getProductLikes = async (req, res) => {
   try {
@@ -689,7 +892,6 @@ const commentProduct = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error: " + error.message });
   }
 };
-
 
 //Function to get all commnets on a product
 const allComments = async (req, res) => {
@@ -875,6 +1077,7 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+
 //Function to get a product by Id
 const getProductById = async (productId) => {
   try {
@@ -924,7 +1127,7 @@ const getAllProducts = async (req, res) => {
         isNew,
         discountedPrices,
         discountedGeneralPrice,
-        label, 
+        label,
       };
     });
 
@@ -1028,4 +1231,7 @@ module.exports = {
   commentProduct,
   allComments,
   sortProducts,
+  updateStock,
+  getAllStock,
+  getProductStock,
 };
