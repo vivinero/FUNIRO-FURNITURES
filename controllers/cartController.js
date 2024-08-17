@@ -103,7 +103,7 @@ const addToCartss = async (req, res) => {
     res.status(500).json({ message: `Error adding to cart: ${err.message}` });
   }
 };
-
+//Function to add to cart
 const addToCart = async (req, res) => {
   try {
     const { userId, productId } = req.params;
@@ -217,7 +217,7 @@ const addToCart = async (req, res) => {
   }
 };
 
-
+//Function to update cart quantity
 const updateCart = async (req, res) => {
   try {
     // Extract userId and productId from request parameters
@@ -392,7 +392,7 @@ const updateCarts = async (req, res) => {
     res.status(500).json({ message: `Error updating cart: ${err.message}` });
   }
 };
-
+//Function to remove specific product from cart
 const removeFromCart = async (req, res) => {
   try {
     // Extract userId, productId, and size from request parameters
@@ -447,7 +447,7 @@ const removeFromCart = async (req, res) => {
       .json({ message: `Error removing from cart: ${err.message}` });
   }
 };
-
+//Function to view cart contents
 const viewCart = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -491,7 +491,7 @@ const viewCart = async (req, res) => {
     res.status(500).json({ message: `Error retrieving cart: ${err.message}` });
   }
 };
-
+//Function clear all contents in a cart
 const deleteCart = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -509,7 +509,7 @@ const deleteCart = async (req, res) => {
   }
 };
 
-
+//Function to checkout a cart
 const checkout = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -629,6 +629,18 @@ const checkout = async (req, res) => {
       order,
     });
   } catch (err) {
+// Handle specific error messages
+const specificErrors = [
+  "Product prices have changed. Please review your cart.",
+  "Product not found during checkout.",
+  "Insufficient stock for"
+];
+
+// If the error message is one of the specific errors, return it as is
+if (specificErrors.some((error) => err.message.startsWith(error))) {
+  return res.status(400).json({ message: err.message });
+}
+
     return res
       .status(500)
       .json({ message: `Error during checkout: ${err.message}` });

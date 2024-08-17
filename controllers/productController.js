@@ -834,7 +834,6 @@ const rateProduct = async (req, res) => {
 };
 
 //Function to comment on a product
-
 const commentProduct = async (req, res) => {
   try {
     const { error, value } = validateComment(req.body);
@@ -1077,7 +1076,6 @@ const deleteProduct = async (req, res) => {
   }
 };
 
-
 //Function to get a product by Id
 const getProductById = async (productId) => {
   try {
@@ -1092,7 +1090,14 @@ const getProductById = async (productId) => {
       calculateDiscountAndTag(product);
 
     // Determine the label for the product
-    const label = isNew ? "new" : `-${product.discountPercentage}%`;
+    let label;
+    if (isNew) {
+      label = "new";
+    } else if (product.discountPercentage && product.discountPercentage > 0) {
+      label = `-${product.discountPercentage}%`;
+    } else {
+      label = "new"; // If there's no discount, it will still show "new"
+    }
 
     // Update the product's discountedPrices, isNew fields, and label
     product.discountedPrices = discountedPrices;
@@ -1108,8 +1113,8 @@ const getProductById = async (productId) => {
   }
 };
 
-// Get all products
 
+// Get all products
 const getAllProducts = async (req, res) => {
   try {
     const products = await productModel.find().populate("category");
@@ -1119,8 +1124,19 @@ const getAllProducts = async (req, res) => {
       const { isNew, discountedPrices, discountedGeneralPrice } =
         calculateDiscountAndTag(product);
 
-      // Determine the label for the product
-      const label = isNew ? "new" : `-${product.discountPercentage}%`;
+      // // Determine the label for the product
+      // const label = isNew ? "new" : `-${product.discountPercentage}%`;
+
+       // Determine the label for the product
+    let label;
+    if (isNew) {
+      label = "new";
+    } else if (product.discountPercentage && product.discountPercentage > 0) {
+      label = `-${product.discountPercentage}%`;
+    } else {
+      label = "new"; // If there's no discount, it will still show "new"
+    }
+
 
       return {
         ...product._doc,
