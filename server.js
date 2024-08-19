@@ -13,23 +13,33 @@ const cors = require('cors');
 //create express instance
 const app = express()
 
-app.use(express.json())
-app.use(userRouter)
-app.use(categoryRouter)
-app.use(productRouter)
-app.use(blog)
-
 // Middleware for CORS
 app.use(cors("*"))
 
+app.use(express.json())
+
+
 // app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 
 
 app.get('/', (req, res) => {
     return res.send("Welcome to Funiro Furnitures");
 })
+
+
+
+app.use(userRouter)
+app.use(categoryRouter)
+app.use(productRouter)
+app.use(blog)
+app.use(cartRouter)
+app.use(filterRouter)
+app.use(contactUsRouter)
+
+app.use('/upload', express.static('uploads'))
+
 
 // Add error handling middleware for JSON parsing errors
 app.use((err, req, res, next) => {
@@ -40,11 +50,6 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: 'Internal Server Error: ' + err });
     next();
 });
-app.use(cartRouter)
-app.use(filterRouter)
-app.use(contactUsRouter)
-
-app.use('/upload', express.static('uploads'))
 
 
 app.listen(process.env.port,()=>{
