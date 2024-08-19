@@ -1,12 +1,11 @@
+// routers/contactUsRouter.js
+
 const express = require('express');
-const contactUs = require('../controllers/contactUsController');
-// const { authenticate } = require('../middlewares/authentication');
+const router = express.Router();
+const {contactUs} = require('../controllers/contactUsController');
 
-// Create the router instance
-const contactUsRouter = express.Router();
+// Define the route with a callback function
+router.post('/contact-us', contactUs);
 
-// Define the route with the middleware and controller
-contactUsRouter.post('/contact-us', contactUs);
+module.exports = router;
 
-// Export the router
-module.exports = contactUsRouter;
