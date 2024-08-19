@@ -6,8 +6,16 @@ const productRouter = require("./routers/productRouter")
 const cartRouter = require("./routers/cartRouter")
 const filterRouter = require('./routers/filterRouter.js')
 const contactUsRouter = require('./routers/contactUsRouter.js')
+const subRouter = require('./routers/subscriptionRouter.js')
+const subConfirmationRouter = require('./routers/subConfirmationRouter')
 const blog = require("./routers/blogRouter.js")
 const cors = require('cors');
+
+const corsOptions = { 
+    origin: process.env.CORS_ORIGIN || '*' ,
+    optionSuccessStatus:200
+}
+
 
 
 //create express instance
@@ -18,9 +26,12 @@ app.use(userRouter)
 app.use(categoryRouter)
 app.use(productRouter)
 app.use(blog)
+app.use(subRouter)
+app.use(subConfirmationRouter)
 
 // Middleware for CORS
-app.use(cors("*"))
+// app.use(cors("*"))
+app.use(cors(corsOptions))
 
 // app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
