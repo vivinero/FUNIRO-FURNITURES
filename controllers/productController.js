@@ -411,7 +411,7 @@ const updateProduct = async (req, res) => {
     }
   }
 };
-
+//Function to update a product stock
 const updateStock = async (req, res) => {
   try {
     const { productId } = req.params;
@@ -485,7 +485,7 @@ const getProductStockS = async (req, res) => {
       .json({ message: `Error fetching product stock: ${err.message}` });
   }
 };
-
+//Function to get a product stock
 const getProductStock = async (req, res) => {
   try {
     const { productId } = req.params;
@@ -520,7 +520,7 @@ const getProductStock = async (req, res) => {
     res.status(500).json({ message: `Error fetching product stock: ${err.message}` });
   }
 };
-
+//Function to get all products stocks
 const getAllStock = async (req, res) => {
   try {
     // Fetch all products with necessary fields
@@ -1112,7 +1112,6 @@ const getProductById = async (productId) => {
     throw error;
   }
 };
-
 
 // Get all products
 const getAllProducts = async (req, res) => {

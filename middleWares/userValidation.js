@@ -87,9 +87,6 @@ return rateSchema.validate(data);
 }}
 
 
-
-
-
 module.exports = { userValidation,
   validateRating,
    validateComment };
