@@ -1,6 +1,7 @@
 const productModel = require("../models/productModel");
 const Category = require("../models/categoryModel");
 const cloudinary = require("../middlewares/cloudinary");
+const userModel = require("../models/userModel");
 const {
   validateComment,
   validateRating,
@@ -852,9 +853,18 @@ const commentProduct = async (req, res) => {
       return res.status(404).json({ error: "Product not found" });
     }
 
-    // Create the new comment object
+    // Retrieve user's first name, last name, and profile image
+    const user = await userModel.findById(userId).select("firstName lastName profileImage");
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Create the new comment object with user's first name, last name, and profile image
     const newComment = {
       user: userId,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      profileImage: user.profileImage,
       comment,
     };
 
@@ -864,31 +874,79 @@ const commentProduct = async (req, res) => {
         id,
         { $push: { comments: newComment } },
         { new: true, runValidators: false }
-      )
-      .populate({
-        path: "comments.user",
-        select: "firstName lastName profileImage",
-      });
+      );
 
-    // Get the newly added comment with the populated user details
-    const addedComment = updatedProduct.comments.pop();
+    // Find the newly added comment with user details
+    const addedComment = updatedProduct.comments[updatedProduct.comments.length - 1];
 
-    // Combine firstName and lastName
-    const fullName = `${addedComment.user.firstName} ${addedComment.user.lastName}`;
+    // Concatenate firstName and lastName to form the full name
+    const fullName = `${addedComment.firstName} ${addedComment.lastName}`;
 
     res.status(201).json({
       message: "Comment added successfully",
       comment: {
-        ...addedComment._doc,
-        user: {
-          _id: addedComment.user._id,
-          name: fullName,
-          profileImage: addedComment.user.profileImage, // Include the user's profile image
-        },
+        _id: addedComment._id,
+        user: addedComment.user,
+        // firstName: addedComment.firstName,
+        // lastName: addedComment.lastName,
+        fullName,
+        profileImage: addedComment.profileImage,
+        comment: addedComment.comment,
+        createdAt: addedComment.createdAt,
       },
     });
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error: " + error.message });
+  }
+};
+
+//Function to delete all comments under all products
+const deleteAllComments = async (req, res) => {
+  try {
+    // Find all products
+    const products = await productModel.find();
+
+    // Iterate over each product and clear the comments array
+    for (const product of products) {
+      product.comments = []; 
+      await product.save();  
+    }
+
+    res.status(200).json({
+      message: "All comments under all products have been deleted successfully.",
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: `Error deleting comments: ${error.message}`,
+    });
+  }
+};
+
+//Function to delete all comments under a product
+const deleteAllCommentsUnderProduct = async (req, res) => {
+  try {
+    const { id } = req.params; 
+
+    // Find the product by ID
+    const product = await productModel.findById(id);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found." });
+    }
+
+    // Clear the comments array
+    product.comments = [];
+
+    // Save the updated product
+    await product.save();
+
+    res.status(200).json({
+      message: "All comments under the product have been deleted successfully.",
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: `Error deleting comments: ${error.message}`,
+    });
   }
 };
 
@@ -1245,8 +1303,10 @@ module.exports = {
   rateProduct,
   commentProduct,
   allComments,
+  deleteAllComments,
   sortProducts,
   updateStock,
   getAllStock,
   getProductStock,
+  deleteAllCommentsUnderProduct
 };

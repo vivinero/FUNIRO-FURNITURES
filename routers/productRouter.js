@@ -15,6 +15,8 @@ const {  createProduct,
     getProductLikes,
     rateProduct,
     commentProduct,
+    deleteAllComments,
+    deleteAllCommentsUnderProduct,
     allComments,
     sortProducts,
     updateStock,
@@ -54,6 +56,13 @@ router.get('/product/:id/likes', getProductLikes);
 
  //endpoint to make comment
  router.post('/product/:id/comment', authenticate, commentProduct)
+
+ //endpoint to delete comments under all products
+ router.delete('/delete-comments', deleteAllComments);
+
+//endpoint to delete comments under a product
+ router.delete('/delete/:id/comments', deleteAllCommentsUnderProduct);
+
 
  //endpoint to get all comments
  router.get('/product/:id/comments', authenticate, allComments)
