@@ -47,6 +47,8 @@ app.use(blog)
 app.use(cartRouter)
 app.use(filterRouter)
 app.use(contactUsRouter)
+app.use(subRouter)
+app.use(subConfirmationRouter)
 
 app.use('/upload', express.static('uploads'))
 
