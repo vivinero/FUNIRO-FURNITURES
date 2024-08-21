@@ -120,6 +120,8 @@ const commentSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
+  firstName: { type: String, required: true },
+  lastName: { type: String, required: true },
   comment: {
     type: String,
     required: true,
@@ -168,6 +170,9 @@ const productSchema = new mongoose.Schema(
     },
     discountedGeneralPrice: {
       type: Number,
+    },
+    name: {
+      type:String
     },
     images:{
       type: Array
@@ -226,7 +231,7 @@ const productSchema = new mongoose.Schema(
       },
     ],
     averageRating: { type: Number, default: 0 },
-    comments: [commentSchema], // Schema for product comments
+    comments: [commentSchema], 
   },
   { timestamps: true }
 );
