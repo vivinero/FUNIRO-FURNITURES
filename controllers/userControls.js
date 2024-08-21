@@ -147,10 +147,6 @@ const verifyOTP = async (req, res) => {
     try {
         const { email, otp } = req.body;
 
-        // Log the incoming data for debugging
-        console.log("Received data:", { email, otp });
-
-        // Check if email and otp are provided
         if (!email || !otp) {
             return res.status(400).json({
                 error: 'Email and OTP are required'
@@ -164,24 +160,21 @@ const verifyOTP = async (req, res) => {
             });
         }
 
-        // Log the user's stored OTP for debugging
-        console.log("Stored OTP hash:", user.otp);
+        // Log the stored OTP to verify it's there
+        console.log('Stored OTP hash for user:', user.email, user.otp);
 
-        // Check if OTP has expired
-        if (user.otpExpires < Date.now()) {
-            return res.status(400).json({
-                error: 'OTP has expired'
-            });
-        }
-
-        // Ensure OTP is present in the user document
         if (!user.otp) {
             return res.status(400).json({
                 error: 'No OTP found for this user'
             });
         }
 
-        // Check if the OTP matches
+        if (user.otpExpires < Date.now()) {
+            return res.status(400).json({
+                error: 'OTP has expired'
+            });
+        }
+
         const isMatch = bcryptjs.compareSync(otp, user.otp);
         if (!isMatch) {
             return res.status(400).json({
@@ -189,7 +182,6 @@ const verifyOTP = async (req, res) => {
             });
         }
 
-        // Clear OTP and OTP expiration time and verify the user
         user.otp = undefined;
         user.otpExpires = undefined;
         user.isVerified = true;
@@ -199,7 +191,6 @@ const verifyOTP = async (req, res) => {
             message: 'OTP verified successfully'
         });
     } catch (error) {
-        console.error("Error in verifyOTP:", error.message);
         res.status(500).json({
             error: error.message
         });
