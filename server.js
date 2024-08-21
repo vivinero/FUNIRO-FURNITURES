@@ -25,7 +25,7 @@ const app = express()
 // app.use(cors("*"))
  app.use(cors(corsOptions))
 
-app.options('*', cors(corsOptions)); // Allow preflight requests for all routes
+app.options('*', cors(corsOptions)); // Allow preflight requests for all routess
 
 
 app.use(express.json())
