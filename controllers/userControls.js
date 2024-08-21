@@ -106,7 +106,7 @@ const signUp = async (req, res) => {
             console.error('Error saving user:', error);
         }
 
-        const verificationLink = `http://your-website.com/verify?otp=${otp}&email=${email}`;
+        const verificationLink = `https://furniro-iota-eight.vercel.app/#/otp${otp}&email=${email}`;
 
         const emailOptions = {
             email: email,
