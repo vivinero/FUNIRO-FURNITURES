@@ -18,7 +18,6 @@ const corsOptions = {
 }
 
 
-
 //create express instance
 const app = express()
 
@@ -31,7 +30,10 @@ app.use(blog)
 
 // Middleware for CORS
 // app.use(cors("*"))
-app.use(cors(corsOptions))
+// app.use(cors(corsOptions))
+
+app.options('*', cors(corsOptions)); // Allow preflight requests for all routes
+
 
 app.use(express.json())
 
