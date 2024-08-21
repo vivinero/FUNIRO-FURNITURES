@@ -23,7 +23,7 @@ const app = express()
 
 // Middleware for CORS
 // app.use(cors("*"))
-// app.use(cors(corsOptions))
+ app.use(cors(corsOptions))
 
 app.options('*', cors(corsOptions)); // Allow preflight requests for all routes
 
