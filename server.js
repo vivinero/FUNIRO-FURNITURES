@@ -34,16 +34,6 @@ app.use(blog)
 
 app.options('*', cors(corsOptions)); // Allow preflight requests for all routess
 
-// Allow requests from your frontend domain
-app.use(cors({
-    origin: 'http://localhost:5173', // Replace with your frontend URL
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true // Allow credentials like cookies or headers
-}));
-
-app.use(express.json())
-
-
 // app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
