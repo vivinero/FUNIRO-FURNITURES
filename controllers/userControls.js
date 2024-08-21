@@ -147,44 +147,68 @@ const verifyOTP = async (req, res) => {
     try {
         const { email, otp } = req.body;
 
-        const user = await userModel.findOne({ email });
-        if (!user) {
-            return res.status(404).json({
-                 error: 'User not found' 
-            });
-        }
-        //check if otp does not meet required time
-        if (user.otpExpires < Date.now()) {
+        // Log the incoming data for debugging
+        console.log("Received data:", { email, otp });
+
+        // Check if email and otp are provided
+        if (!email || !otp) {
             return res.status(400).json({
-                 error: 'OTP has expired' 
-            });
-        }
-        //check if the otp match the one sent
-        const isMatch = bcryptjs.compareSync(otp, user.otp);
-        if (!isMatch) {
-            return res.status(400).json({
-                error: 'This OTP Invalid '
+                error: 'Email and OTP are required'
             });
         }
 
-        // This is to clear OTP and OTP expiration time and verify the user
+        const user = await userModel.findOne({ email });
+        if (!user) {
+            return res.status(404).json({
+                error: 'User not found'
+            });
+        }
+
+        // Log the user's stored OTP for debugging
+        console.log("Stored OTP hash:", user.otp);
+
+        // Check if OTP has expired
+        if (user.otpExpires < Date.now()) {
+            return res.status(400).json({
+                error: 'OTP has expired'
+            });
+        }
+
+        // Ensure OTP is present in the user document
+        if (!user.otp) {
+            return res.status(400).json({
+                error: 'No OTP found for this user'
+            });
+        }
+
+        // Check if the OTP matches
+        const isMatch = bcryptjs.compareSync(otp, user.otp);
+        if (!isMatch) {
+            return res.status(400).json({
+                error: 'Invalid OTP'
+            });
+        }
+
+        // Clear OTP and OTP expiration time and verify the user
         user.otp = undefined;
         user.otpExpires = undefined;
         user.isVerified = true;
         await user.save();
 
-        res.status(200).json({ 
-            message: 'OTP verified successfully' 
+        res.status(200).json({
+            message: 'OTP verified successfully'
         });
     } catch (error) {
+        console.error("Error in verifyOTP:", error.message);
         res.status(500).json({
-             error: error.message 
+            error: error.message
         });
     }
 };
 
 const resendOTP = async (req, res) => {
     try {
+        console.log(req.body); // Debugging line
         const { email } = req.body;
 
         const user = await userModel.findOne({ email });
