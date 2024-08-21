@@ -332,7 +332,7 @@ const forgotPassword = async (req, res) => {
         else {
             const name = myUser.firstName + ' ' + myUser.lastName
             const subject = 'Kindly reset your password'
-            const link = `http://localhost:${port}/user-reset/${myUser.id}`
+            const link = `https://furniro-iota-eight.vercel.app/#/forget-password{myUser.id}`
             const html = resetFunc(name, link)
             sendEmail({
                 email: myUser.email,
