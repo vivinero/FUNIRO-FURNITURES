@@ -265,7 +265,8 @@ const logIn = async(req, res)=>{
         //Throw success message
         res.status(200).json({
             message: "Login Successful",
-            data: token
+            data: user,
+            token
         })
 
     } catch (error) {
