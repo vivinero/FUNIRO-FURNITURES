@@ -208,7 +208,7 @@ const signUp = async (req, res) => {
             lastName: newUser.lastName,
         }, process.env.JWT_SECRET, { expiresIn: "1hr" });
         console.log('Generated Token:', token);
-
+        console.log('New User Before Save:', newUser)
         res.status(200).json({
             message: `Hello, ${newUser.firstName}. Your account has been successfully created and an OTP has been sent to your email.`,
             data: newUser,
