@@ -1,11 +1,4 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const multer = require('multer');
-const app = express();
-
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
+const multer = require("multer")
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -31,7 +24,7 @@ const upload = multer({
     storage,
     fileFilter,
     limits: { fileSize: fileSize }
-})
+});
 
 module.exports = { upload };
 
