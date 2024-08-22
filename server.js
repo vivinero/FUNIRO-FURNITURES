@@ -11,10 +11,23 @@ const subConfirmationRouter = require('./routers/subConfirmationRouter')
 const blog = require("./routers/blogRouter.js")
 const cors = require('cors');
 
-const corsOptions = { 
-    origin: process.env.CORS_ORIGIN || '*' ,
-    optionSuccessStatus:200
-}
+// const corsOptions = { 
+//     origin: process.env.CORS_ORIGIN || '*' ,
+//     optionSuccessStatus:200
+// }
+const allowedOrigins = [process.env.CORS_ORIGIN_LOCAL, process.env.CORS_ORIGIN_PRODUCTION];
+
+const corsOptions = {
+    origin: function (origin, callback) {
+        if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+            callback(null, true)
+        } else {
+            callback(new Error('Not allowed by CORS'))
+        }
+    },
+    optionsSuccessStatus: 200
+};
+
 
 
 //create express instance

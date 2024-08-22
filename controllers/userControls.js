@@ -149,6 +149,13 @@ exports.logIn = async(req, res)=>{
             lastName: user.lastName,
             email: user.email
         }, process.env.JWT_SECRET, {expiresIn: "2d"}) 
+
+
+         // Save the token to the database
+         user.token = token;
+         await user.save();
+
+         
         //Throw success message
         res.status(200).json({
             message: "Login Successful",
