@@ -225,34 +225,42 @@ const signUp = async (req, res) => {
 
 
 const verifyOTP = async (req, res) => {
-    // console.log('Stored OTP hash for user:', user.otp);
-    console.log("Hello world")
-    // const { email, otp } = req.body;
-    // console.log(email, otp)
-
+    console.log("Hello world");
 
     try {
         const { email, otp } = req.body;
 
+        // Check if email and OTP are provided
         if (!email || !otp) {
             return res.status(400).json({
                 error: 'Email and OTP are required'
             });
         }
 
-        const user = await userModel.find();
-    //     console.log('Retrieved User:', user);
-
+        // Find user by email
+        const user = await userModel.findOne({ email });
+        
         if (!user) {
             return res.status(404).json({
                 error: 'User not found'
             });
         }
 
-        const myOtpExp = user.find(e => e.email === email).otpExpires
-        // You can always console.log to be sure of your result
-        console.log(myOtpExp)
+        // Check if OTP is stored for the user
+        if (!user.otp) {
+            return res.status(400).json({
+                error: 'No OTP found for this user'
+            });
+        }
 
+        // Check if OTP has expired
+        if (user.otpExpires < Date.now()) {
+            return res.status(400).json({
+                error: 'OTP has expired'
+            });
+        }
+
+        // Compare the provided OTP with the stored hashed OTP
         const isMatch = bcryptjs.compareSync(otp, user.otp);
         if (!isMatch) {
             return res.status(400).json({
@@ -260,17 +268,19 @@ const verifyOTP = async (req, res) => {
             });
         }
 
+        // Clear OTP fields and mark user as verified
         user.otp = undefined;
         user.otpExpires = undefined;
         user.isVerified = true;
 
         await user.save();
-        
 
+        // Respond with success message
         res.status(200).json({
             message: 'OTP verified successfully'
         });
     } catch (error) {
+        // Handle any errors that occur during the process
         res.status(500).json({
             error: `testing: ${error.message}`
         });
