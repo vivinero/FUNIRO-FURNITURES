@@ -207,9 +207,6 @@ const signUp = async (req, res) => {
             firstName: newUser.firstName,
             lastName: newUser.lastName,
         }, process.env.JWT_SECRET, { expiresIn: "1hr" });
-        // Save the token to the database
-         newUser.token = token;
-         await newUser.save();
         console.log('Generated Token:', token);
         console.log('New User Before Save:', newUser)
         res.status(200).json({
@@ -373,6 +370,8 @@ const logIn = async(req, res)=>{
             lastName: user.lastName,
             email: user.email
         }, process.env.JWT_SECRET, {expiresIn: "2d"}) 
+        user.token = token;
+        await user.save();
         //Throw success message
         res.status(200).json({
             message: "Login Successful",
