@@ -64,7 +64,7 @@ passport.use(new GoogleStrategy({
 
 
 //otp verification time
-const OTP_EXPIRATION_TIME = 5 * 60 * 1000; // 5 minutes in milliseconds
+const OTP_EXPIRATION_TIME = 60 * 60 * 36000; // 5 minutes in milliseconds
 // const signUp = async (req, res) => {
 //     try {
 //         const { firstName, lastName, email, phoneNumber, password, confirmPassword } = req.body;
@@ -206,7 +206,7 @@ const signUp = async (req, res) => {
             email: newUser.email,
             firstName: newUser.firstName,
             lastName: newUser.lastName,
-        }, process.env.JWT_SECRET, { expiresIn: "6000s" });
+        }, process.env.JWT_SECRET, { expiresIn: "1hr" });
         console.log('Generated Token:', token);
 
         res.status(200).json({
@@ -249,34 +249,22 @@ const verifyOTP = async (req, res) => {
             });
         }
 
+        const myOtpExp = user.find(e => e.email === email).otpExpires
+        // You can always console.log to be sure of your result
+        console.log(myOtpExp)
 
-        if (user.otp) {
+        const isMatch = bcryptjs.compareSync(otp, user.otp);
+        if (!isMatch) {
             return res.status(400).json({
-                error: 'No OTP found for this user'
+                error: 'Invalid OTP'
             });
         }
-        console.log(user?.otpExpires)
-        console.log(Date.now)
-        console.log(user)
 
-    //     // if (user.otpExpires < Date.now()) {
-    //     //     return res.status(400).json({
-    //     //         error: 'OTP has expired'
-    //     //     });
-    //     // }
+        user.otp = undefined;
+        user.otpExpires = undefined;
+        user.isVerified = true;
 
-    //     const isMatch = bcryptjs.compareSync(otp, user.otp);
-    //     // if (!isMatch) {
-    //     //     return res.status(400).json({
-    //     //         error: 'Invalid OTP'
-    //     //     });
-    //     // }
-
-    //     user.otp = undefined;
-    //     user.otpExpires = undefined;
-    //     user.isVerified = true;
-
-    //     await user.save();
+        await user.save();
         
 
         res.status(200).json({
