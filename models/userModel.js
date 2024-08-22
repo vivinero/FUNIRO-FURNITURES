@@ -1,3 +1,4 @@
+const { type } = require("@hapi/joi/lib/extend");
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
@@ -36,7 +37,11 @@ const userSchema = new mongoose.Schema({
     },
     token: {
         type: String,
+    },
+    otpExpires:{
+        type: Date,
     }
+    
 }, {timestamps: true});
 
 const userModel = mongoose.model("User", userSchema);
