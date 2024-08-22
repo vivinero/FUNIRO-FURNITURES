@@ -225,12 +225,11 @@ const signUp = async (req, res) => {
 
 
 const verifyOTP = async (req, res) => {
-    console.log("Hello world");
+    console.log("Starting OTP verification...");
 
     try {
         const { email, otp } = req.body;
 
-        // Check if email and OTP are provided
         if (!email || !otp) {
             return res.status(400).json({
                 error: 'Email and OTP are required'
@@ -239,14 +238,16 @@ const verifyOTP = async (req, res) => {
 
         // Find user by email
         const user = await userModel.findOne({ email });
-        
+
         if (!user) {
             return res.status(404).json({
                 error: 'User not found'
             });
         }
 
-        // Check if OTP is stored for the user
+        console.log('Retrieved User:', user); // Log the user object to inspect it
+        console.log('Stored OTP hash for user:', user.otp); // Log the OTP field specifically
+
         if (!user.otp) {
             return res.status(400).json({
                 error: 'No OTP found for this user'
@@ -275,18 +276,15 @@ const verifyOTP = async (req, res) => {
 
         await user.save();
 
-        // Respond with success message
         res.status(200).json({
             message: 'OTP verified successfully'
         });
     } catch (error) {
-        // Handle any errors that occur during the process
         res.status(500).json({
-            error: `testing: ${error.message}`
+            error: `Error: ${error.message}`
         });
     }
 };
-
 
 const resendOTP = async (req, res) => {
     try {
