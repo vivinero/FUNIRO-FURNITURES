@@ -780,9 +780,9 @@ const rateProduct = async (req, res) => {
     const userId = req.user.userId;
 
     // Validate rating value
-    if (rating < 1 || rating > 5) {
-      return res.status(400).json({ message: "Rating must be between 1 and 5" });
-    }
+    // if (rating < 1 || rating > 5) {
+    //   return res.status(400).json({ message: "Rating must be between 1 and 5" });
+    // }
 
     // Check if the product exists
     const product = await productModel.findById(productId);
