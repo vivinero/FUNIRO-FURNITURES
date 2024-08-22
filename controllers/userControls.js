@@ -65,6 +65,82 @@ passport.use(new GoogleStrategy({
 
 //otp verification time
 const OTP_EXPIRATION_TIME = 5 * 60 * 1000; // 5 minutes in milliseconds
+// const signUp = async (req, res) => {
+//     try {
+//         const { firstName, lastName, email, phoneNumber, password, confirmPassword } = req.body;
+
+//         const emailExist = await userModel.findOne({ email });
+//         if (emailExist) {
+//             return res.status(404).json({
+//                 error: "User already exists"
+//             });
+//         }
+
+//         if (confirmPassword !== password) {
+//             return res.status(400).json({
+//                 error: "Password mismatch"
+//             });
+//         }
+
+//         const salt = bcryptjs.genSaltSync(12);
+//         const hash = bcryptjs.hashSync(password, salt);
+
+//         // Register the newuser
+//         const newUser = await userModel.create({
+//             firstName: firstName.toLowerCase(),
+//             lastName: lastName.toLowerCase(),
+//             email: email.toLowerCase(),
+//             password: hash,
+//             phoneNumber,
+//             confirmPassword: hash
+//         });
+
+//         // Generate and send OTP to the user
+//         const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, lowerCaseAlphabets: false, specialChars: false });
+//         const hashOTP = bcryptjs.hashSync(otp, salt);
+//         newUser.otp = hashOTP;
+//         newUser.otpExpires = Date.now() + OTP_EXPIRATION_TIME;
+//         try {
+//             await newUser.save(); 
+//         } catch (error) {
+//             console.error('Error saving user:', error);
+//         }
+
+//         const verificationLink = `https://furniro-iota-eight.vercel.app/#/otp${otp}&email=${email}`;
+
+//         const emailOptions = {
+//             email: email,
+//             subject: "Your OTP code",
+//             text: `<p>Your OTP code is <strong>${otp}</strong>. It is valid for 5 minutes.</p>`,
+//             html: dynamicHtml(otp, verificationLink),
+//         };
+
+//         const emailResult = await sendEmail(emailOptions);
+//         if (emailResult.status === 'error') {
+//             return res.status(500).json({ error: emailResult.message });
+//         }
+
+//         const token = jwt.sign({
+//             userId: newUser._id,
+//             email: newUser.email,
+//             firstName: newUser.firstName,
+//             lastName: newUser.lastName,
+//         }, process.env.JWT_SECRET, { expiresIn: "6000s" });
+
+//         console.log('Generated Token:', token);
+//         res.status(200).json({
+//             message: `Hello, ${newUser.firstName}. Your account has been successfully created and an OTP has been sent to your email.`,
+//             data: newUser,
+//             token
+//         });
+
+//     } catch (error) {
+//         res.status(500).json({
+//             error: error.message
+//         });
+//     }
+// };
+
 const signUp = async (req, res) => {
     try {
         const { firstName, lastName, email, phoneNumber, password, confirmPassword } = req.body;
@@ -85,7 +161,7 @@ const signUp = async (req, res) => {
         const salt = bcryptjs.genSaltSync(12);
         const hash = bcryptjs.hashSync(password, salt);
 
-        // Register the newuser
+        // Register the new user
         const newUser = await userModel.create({
             firstName: firstName.toLowerCase(),
             lastName: lastName.toLowerCase(),
@@ -100,34 +176,18 @@ const signUp = async (req, res) => {
         const hashOTP = bcryptjs.hashSync(otp, salt);
         newUser.otp = hashOTP;
         newUser.otpExpires = Date.now() + OTP_EXPIRATION_TIME;
+
+        console.log('Generated OTP:', otp); // Log generated OTP
+        console.log('Hashed OTP:', hashOTP); // Log hashed OTP
+
         try {
-            await newUser.save(); // Save the user after updating the token
+            await newUser.save(); 
         } catch (error) {
             console.error('Error saving user:', error);
         }
 
-        const verificationLink = `https://furniro-iota-eight.vercel.app/#/otp${otp}&email=${email}`;
+        // Email and token generation logic here...
 
-        const emailOptions = {
-            email: email,
-            subject: "Your OTP code",
-            text: `<p>Your OTP code is <strong>${otp}</strong>. It is valid for 5 minutes.</p>`,
-            html: dynamicHtml(otp, verificationLink),
-        };
-
-        const emailResult = await sendEmail(emailOptions);
-        if (emailResult.status === 'error') {
-            return res.status(500).json({ error: emailResult.message });
-        }
-
-        const token = jwt.sign({
-            userId: newUser._id,
-            email: newUser.email,
-            firstName: newUser.firstName,
-            lastName: newUser.lastName,
-        }, process.env.JWT_SECRET, { expiresIn: "6000s" });
-
-        console.log('Generated Token:', token);
         res.status(200).json({
             message: `Hello, ${newUser.firstName}. Your account has been successfully created and an OTP has been sent to your email.`,
             data: newUser,
@@ -154,14 +214,15 @@ const verifyOTP = async (req, res) => {
         }
 
         const user = await userModel.findOne({ email });
+        console.log('Retrieved User:', user);
+
         if (!user) {
             return res.status(404).json({
                 error: 'User not found'
             });
         }
 
-        // Log the stored OTP to verify it's there
-        console.log('Stored OTP hash for user:', user.email, user.otp);
+        console.log('Stored OTP hash for user:', user.otp);
 
         if (!user.otp) {
             return res.status(400).json({
@@ -185,7 +246,15 @@ const verifyOTP = async (req, res) => {
         user.otp = undefined;
         user.otpExpires = undefined;
         user.isVerified = true;
-        await user.save();
+
+        try {
+            await user.save();
+        } catch (error) {
+            console.error('Error saving user:', error);
+            return res.status(500).json({
+                error: 'Internal Server Error'
+            });
+        }
 
         res.status(200).json({
             message: 'OTP verified successfully'
@@ -196,6 +265,7 @@ const verifyOTP = async (req, res) => {
         });
     }
 };
+
 
 const resendOTP = async (req, res) => {
     try {
@@ -234,7 +304,8 @@ const resendOTP = async (req, res) => {
 
         if (emailResponse.success) {
             res.status(200).json({ 
-                message: 'OTP resent successfully'
+                message: 'OTP resent successfully',
+                otp
             });
         } else {
             res.status(500).json({ 
