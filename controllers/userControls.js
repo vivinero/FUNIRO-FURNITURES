@@ -227,6 +227,9 @@ const signUp = async (req, res) => {
 const verifyOTP = async (req, res) => {
     // console.log('Stored OTP hash for user:', user.otp);
     console.log("Hello world")
+    // const { email, otp } = req.body;
+    // console.log(email, otp)
+
 
     try {
         const { email, otp } = req.body;
@@ -238,7 +241,7 @@ const verifyOTP = async (req, res) => {
         }
 
         const user = await userModel.find();
-        console.log('Retrieved User:', user);
+    //     console.log('Retrieved User:', user);
 
         if (!user) {
             return res.status(404).json({
@@ -252,39 +255,36 @@ const verifyOTP = async (req, res) => {
                 error: 'No OTP found for this user'
             });
         }
+        console.log(user?.otpExpires)
+        console.log(Date.now)
+        console.log(user)
 
-        if (user.otpExpires < Date.now()) {
-            return res.status(400).json({
-                error: 'OTP has expired'
-            });
-        }
+    //     // if (user.otpExpires < Date.now()) {
+    //     //     return res.status(400).json({
+    //     //         error: 'OTP has expired'
+    //     //     });
+    //     // }
 
-        const isMatch = bcryptjs.compareSync(otp, user.otp);
-        if (!isMatch) {
-            return res.status(400).json({
-                error: 'Invalid OTP'
-            });
-        }
+    //     const isMatch = bcryptjs.compareSync(otp, user.otp);
+    //     // if (!isMatch) {
+    //     //     return res.status(400).json({
+    //     //         error: 'Invalid OTP'
+    //     //     });
+    //     // }
 
-        user.otp = undefined;
-        user.otpExpires = undefined;
-        user.isVerified = true;
+    //     user.otp = undefined;
+    //     user.otpExpires = undefined;
+    //     user.isVerified = true;
 
-        try {
-            await user.save();
-        } catch (error) {
-            console.error('Error saving user:', error);
-            return res.status(500).json({
-                error: 'Internal Server Error'
-            });
-        }
+    //     await user.save();
+        
 
         res.status(200).json({
             message: 'OTP verified successfully'
         });
     } catch (error) {
         res.status(500).json({
-            error: error.message
+            error: `testing: ${error.message}`
         });
     }
 };
