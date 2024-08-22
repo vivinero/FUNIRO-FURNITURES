@@ -225,6 +225,9 @@ const signUp = async (req, res) => {
 
 
 const verifyOTP = async (req, res) => {
+    // console.log('Stored OTP hash for user:', user.otp);
+    console.log("Hello world")
+
     try {
         const { email, otp } = req.body;
 
@@ -234,7 +237,7 @@ const verifyOTP = async (req, res) => {
             });
         }
 
-        const user = await userModel.findOne({ email });
+        const user = await userModel.find();
         console.log('Retrieved User:', user);
 
         if (!user) {
@@ -243,9 +246,8 @@ const verifyOTP = async (req, res) => {
             });
         }
 
-        console.log('Stored OTP hash for user:', user.otp);
 
-        if (!user.otp) {
+        if (user.otp) {
             return res.status(400).json({
                 error: 'No OTP found for this user'
             });
