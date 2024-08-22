@@ -201,7 +201,7 @@ const signUp = async (req, res) => {
             return res.status(500).json({ error: emailResult.message });
         }
 
-        const token = jwtSecret.sign({
+        const token = jwt.sign({
             userId: newUser._id,
             email: newUser.email,
             firstName: newUser.firstName,
