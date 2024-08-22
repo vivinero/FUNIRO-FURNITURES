@@ -392,6 +392,7 @@ const updateCarts = async (req, res) => {
     res.status(500).json({ message: `Error updating cart: ${err.message}` });
   }
 };
+
 //Function to remove specific product from cart
 const removeFromCart = async (req, res) => {
   try {
@@ -447,6 +448,7 @@ const removeFromCart = async (req, res) => {
       .json({ message: `Error removing from cart: ${err.message}` });
   }
 };
+
 //Function to view cart contents
 const viewCart = async (req, res) => {
   try {
@@ -491,6 +493,7 @@ const viewCart = async (req, res) => {
     res.status(500).json({ message: `Error retrieving cart: ${err.message}` });
   }
 };
+
 //Function clear all contents in a cart
 const deleteCart = async (req, res) => {
   try {

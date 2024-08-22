@@ -779,10 +779,9 @@ const rateProduct = async (req, res) => {
     const { rating } = req.body;
     const userId = req.user.userId;
 
-    if (req.body.rating < 1 || req.body.rating > 5) {
-      return res
-        .status(400)
-        .json({ message: "Rating must be between 1 and 5" });
+    // Validate rating value
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({ message: "Rating must be between 1 and 5" });
     }
 
     // Check if the product exists
@@ -796,8 +795,6 @@ const rateProduct = async (req, res) => {
       (r) => r.userId.toString() === userId.toString()
     );
 
-    let update;
-
     if (existingRatingIndex !== -1) {
       // Update the existing rating
       product.ratings[existingRatingIndex].rating = rating;
@@ -810,16 +807,10 @@ const rateProduct = async (req, res) => {
     const totalRating = product.ratings.reduce((sum, r) => sum + r.rating, 0);
     const averageRating = totalRating / product.ratings.length;
 
-    // Prepare update object
-    update = {
-      ratings: product.ratings,
-      averageRating,
-    };
-
-    // Save the product without triggering full validation
+    // Save the updated product with new ratings and average rating
     const updatedProduct = await productModel.findByIdAndUpdate(
       productId,
-      { $set: update },
+      { $set: { ratings: product.ratings, averageRating } },
       { new: true, runValidators: false }
     );
 
@@ -833,6 +824,7 @@ const rateProduct = async (req, res) => {
     });
   }
 };
+
 
 //Function to comment on a product
 const commentProduct = async (req, res) => {
