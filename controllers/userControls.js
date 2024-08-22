@@ -226,28 +226,31 @@ const signUp = async (req, res) => {
 
 const verifyOTP = async (req, res) => {
     console.log("Starting OTP verification...");
-
     try {
-        const { email, otp } = req.body;
-
-        if (!email || !otp) {
+        const id = req.params
+        const myId = id.id
+        const { otp } = req.body;
+        console.log("This is Id", myId)
+        if (!otp) {
             return res.status(400).json({
                 error: 'Email and OTP are required'
             });
         }
 
         // Find user by email
-        const user = await userModel.findOne({ email });
+        const user = await userModel.findById(myId);
+        console.log("This is user", user);
 
         if (!user) {
             return res.status(404).json({
                 error: 'User not found'
             });
         }
-
-        console.log('Retrieved User:', user); // Log the user object to inspect it
-        console.log('Stored OTP hash for user:', user.otp); // Log the OTP field specifically
-
+        
+        // console.log('Retrieved User:', user); // Log the user object to inspect it
+        // console.log('Stored OTP hash for user:', user.otp); // Log the OTP field specifically
+        // console.log(user.map(e => e)); // Log the OTP field specifically
+        
         if (!user.otp) {
             return res.status(400).json({
                 error: 'No OTP found for this user'
