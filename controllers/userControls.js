@@ -207,6 +207,9 @@ const signUp = async (req, res) => {
             firstName: newUser.firstName,
             lastName: newUser.lastName,
         }, process.env.JWT_SECRET, { expiresIn: "1hr" });
+        // Save the token to the database
+         user.token = token;
+         await user.save();
         console.log('Generated Token:', token);
         console.log('New User Before Save:', newUser)
         res.status(200).json({
