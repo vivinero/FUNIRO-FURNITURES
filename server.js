@@ -31,6 +31,8 @@ const contactUsRouter = require('./routers/contactUsRouter.js');
 const subRouter = require('./routers/subscriptionRouter.js');
 const subConfirmationRouter = require('./routers/subConfirmationRouter');
 const blogRouter = require("./routers/blogRouter.js");
+const locationRoutes = require('./routers/locationRouter');
+const formRouter = require('./routers/formRouter')
 
 
 
@@ -65,6 +67,9 @@ app.use(filterRouter);
 app.use(contactUsRouter);
 app.use(subRouter);
 app.use(subConfirmationRouter);
+app.use(locationRoutes);
+app.use(formRouter)
+
 
 // Static file serving
 app.use('/upload', express.static('uploads'));

@@ -650,6 +650,31 @@ if (specificErrors.some((error) => err.message.startsWith(error))) {
   }
 };
 
+const express = require('express');
+const { Country, State, City } = require('country-state-city');
+const app = express();
+
+// Get all countries
+app.get('/api/countries', (req, res) => {
+  const countries = Country.getAllCountries();
+  res.json(countries);
+});
+
+// Get states by country code
+app.get('/api/countries/:countryCode/states', (req, res) => {
+  const { countryCode } = req.params;
+  const states = State.getStatesOfCountry(countryCode);
+  res.json(states);
+});
+
+// Get cities by state code
+app.get('/api/countries/:countryCode/states/:stateCode/cities', (req, res) => {
+  const { stateCode } = req.params;
+  const cities = City.getCitiesOfState(stateCode);
+  res.json(cities);
+});
+
+
 
 
 

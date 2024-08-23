@@ -87,6 +87,84 @@ return rateSchema.validate(data);
 }}
 
 
+
+const validateForm = (data) => {
+  try {
+    const addressSchema = Joi.object({
+      firstName: Joi.string().min(2).max(30).required().messages({
+        'string.base': 'First name should be a string.',
+        'string.min': 'First name should have at least 2 characters.',
+        'string.max': 'First name should not exceed 30 characters.',
+        'any.required': 'First name is required.'
+      }),
+      lastName: Joi.string().min(2).max(30).required().messages({
+        'string.base': 'Last name should be a string.',
+        'string.min': 'Last name should have at least 2 characters.',
+        'string.max': 'Last name should not exceed 30 characters.',
+        'any.required': 'Last name is required.'
+      }),
+      companyName: Joi.string().max(50).allow('').messages({
+        'string.base': 'Company name should be a string.',
+        'string.max': 'Company name should not exceed 50 characters.'
+      }), // Optional field
+      streetAddress: Joi.string().min(5).max(100).required().messages({
+        'string.base': 'Street address should be a string.',
+        'string.min': 'Street address should have at least 5 characters.',
+        'string.max': 'Street address should not exceed 100 characters.',
+        'any.required': 'Street address is required.'
+      }),
+      zipCode: Joi.string().pattern(/^[0-9]{5,6}$/).required().messages({
+        'string.base': 'Zip code should be a string.',
+        'string.pattern.base': 'Zip code must be a valid 5 or 6 digit number.',
+        'any.required': 'Zip code is required.'
+      }),
+      phone: Joi.string().pattern(/^[0-9]{10,15}$/).required().messages({
+        'string.base': 'Phone number should be a string.',
+        'string.pattern.base': 'Phone number must be between 10 and 15 digits.',
+        'any.required': 'Phone number is required.'
+      }),
+      email: Joi.string().email().required().messages({
+        'string.base': 'Email should be a string.',
+        'string.email': 'Email must be a valid email address.',
+        'any.required': 'Email is required.'
+      }),
+      additionalInformation: Joi.string().max(200).allow('').messages({
+        'string.base': 'Additional information should be a string.',
+        'string.max': 'Additional information should not exceed 200 characters.'
+      }), // Optional field
+      country: Joi.string().min(2).max(50).required().messages({
+        'string.base': 'Country should be a string.',
+        'string.min': 'Country should have at least 2 characters.',
+        'string.max': 'Country should not exceed 50 characters.',
+        'any.required': 'Country is required.'
+      }),
+      city: Joi.string().min(2).max(50).required().messages({
+        'string.base': 'City should be a string.',
+        'string.min': 'City should have at least 2 characters.',
+        'string.max': 'City should not exceed 50 characters.',
+        'any.required': 'City is required.'
+      }),
+      state: Joi.string().min(2).max(50).required().messages({
+        'string.base': 'State should be a string.',
+        'string.min': 'State should have at least 2 characters.',
+        'string.max': 'State should not exceed 50 characters.',
+        'any.required': 'State is required.'
+      }),
+    });
+
+    const { error, value } = addressSchema.validate(data, { abortEarly: false });
+    if (error) {
+      return { error: error.details.map(detail => detail.message) };
+    }
+    return { value };
+  } catch (error) {
+    throw error;
+  }
+};
+
+
+
 module.exports = { userValidation,
   validateRating,
-   validateComment };
+   validateComment,
+   validateForm };
