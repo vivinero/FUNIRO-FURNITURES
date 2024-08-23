@@ -7,7 +7,7 @@ const cors = require('cors');
 //     origin: process.env.CORS_ORIGIN || '*' ,
 //     optionSuccessStatus:200
 // }
-const allowedOrigins = [process.env.CORS_ORIGIN];
+const allowedOrigins = [process.env.CORS_ORIGIN, process.env.CORS_ORIGIN_PRODUCTION];
 
 const corsOptions = {
     origin: function (origin, callback) {
