@@ -2,6 +2,7 @@ const cartModel = require("../models/cartModel");
 const productModel = require("../models/productModel");
 const userModel = require("../models/userModel");
 const orderModel = require("../models/orderModel");
+const formModel = require ("../models/formModel");
 
 
 
@@ -650,31 +651,26 @@ if (specificErrors.some((error) => err.message.startsWith(error))) {
   }
 };
 
-const express = require('express');
-const { Country, State, City } = require('country-state-city');
-const app = express();
+const getOrderDetails = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    
 
-// Get all countries
-app.get('/api/countries', (req, res) => {
-  const countries = Country.getAllCountries();
-  res.json(countries);
-});
+    const order = await orderModel.findById(orderId).populate('products').populate('userId');
+    const address = await formModel.findOne({ userId: order.userId });
 
-// Get states by country code
-app.get('/api/countries/:countryCode/states', (req, res) => {
-  const { countryCode } = req.params;
-  const states = State.getStatesOfCountry(countryCode);
-  res.json(states);
-});
+    if (!order || !address) {
+      return res.status(404).json({ error: "Order or address not found" });
+    }
 
-// Get cities by state code
-app.get('/api/countries/:countryCode/states/:stateCode/cities', (req, res) => {
-  const { stateCode } = req.params;
-  const cities = City.getCitiesOfState(stateCode);
-  res.json(cities);
-});
-
-
+    res.status(200).json({
+      order,
+      address,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error: " + error.message });
+  }
+};
 
 
 
@@ -690,4 +686,5 @@ module.exports = {
   deleteCart,
   updateCart,
   checkout,
+  getOrderDetails
 };

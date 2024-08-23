@@ -10,6 +10,11 @@ exports.getAllCountries = (req, res) => {
 exports.getStatesByCountry = (req, res) => {
   const { countryCode } = req.params;
   const states = State.getStatesOfCountry(countryCode);
+  if (states.length === 0) {
+    return res.status(404).json({
+      message: `No states found for the country code: ${countryCode}`
+    });
+  }
   res.json(states);
 };
 
@@ -17,5 +22,10 @@ exports.getStatesByCountry = (req, res) => {
 exports.getCitiesByState = (req, res) => {
     const { countryCode, isoCode } = req.params;
     const cities = City.getCitiesOfState(countryCode, isoCode);
+    if (cities.length === 0) {
+      return res.status(404).json({
+        message: `No cities found for the state code: ${isoCode}`
+      });
+    }
     res.json(cities);
 };
