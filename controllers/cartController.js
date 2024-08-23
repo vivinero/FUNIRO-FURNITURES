@@ -3,6 +3,7 @@ const productModel = require("../models/productModel");
 const userModel = require("../models/userModel");
 const orderModel = require("../models/orderModel");
 const formModel = require ("../models/formModel");
+const mongoose = require('mongoose');
 
 
 
@@ -651,16 +652,29 @@ if (specificErrors.some((error) => err.message.startsWith(error))) {
   }
 };
 
+
+
 const getOrderDetails = async (req, res) => {
   try {
     const { orderId } = req.params;
-    
+
+    // Check if the orderId is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      return res.status(400).json({ error: "Invalid Order ID" });
+    }
 
     const order = await orderModel.findById(orderId).populate('products').populate('userId');
-    const address = await formModel.findOne({ userId: order.userId });
+    
+    // If no order is found
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
 
-    if (!order || !address) {
-      return res.status(404).json({ error: "Order or address not found" });
+    const address = await formModel.findOne({ userId: order.userId });
+    
+    // If no address is found
+    if (!address) {
+      return res.status(404).json({ error: "Address not found" });
     }
 
     res.status(200).json({
@@ -669,6 +683,25 @@ const getOrderDetails = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error: " + error.message });
+  }
+};
+
+
+// Function to get all orders
+const getAllOrders = async (req, res) => {
+  try {
+    // Find all orders, populate user and product details if needed
+    const orders = await orderModel.find().populate('userId').populate('products');
+
+    // Send the list of orders as a response
+    res.status(200).json({
+      message: "Orders retrieved successfully",
+      data: orders,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: "Internal Server Error: " + error.message,
+    });
   }
 };
 
@@ -686,5 +719,6 @@ module.exports = {
   deleteCart,
   updateCart,
   checkout,
-  getOrderDetails
+  getOrderDetails,
+  getAllOrders
 };
