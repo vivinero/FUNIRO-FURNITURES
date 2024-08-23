@@ -170,7 +170,10 @@ const createProduct = async (req, res) => {
       category: categoryId,
     });
 
-    await newProduct.save();
+    theCategory.products.push(newProduct._id);
+    await theCategory.save();
+
+    //await newProduct.save();
 
     res.status(201).json({
       message: "Product created successfully",
