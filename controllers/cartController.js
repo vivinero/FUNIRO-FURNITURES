@@ -532,7 +532,7 @@ const checkout = async (req, res) => {
       select: "itemName description productImage sizes stock price discountPercentage createdAt",
     });
 
-    if (!cart || cart.products.length === 0) {
+    if (!cart) {
       return res.status(400).json({ message: "Your cart is empty." });
     }
 
