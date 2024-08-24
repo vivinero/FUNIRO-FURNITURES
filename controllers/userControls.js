@@ -468,55 +468,57 @@ const forgotPassword = async (req, res) => {
 
 const resetPassword = async (req, res) => {
     try {
-        // Get user ID from params and token from query
-        const id = req.params.id;
-        const token = req.query.token;
-        const password = req.body.password;
-
-        // Check if password exists
-        if (!password) {
+        const { id } = req.params;
+        const { password, confirmPassword } = req.body;
+        
+        if (confirmPassword !== password) {
             return res.status(400).json({
-                message: "Password cannot be left empty"
+                error: "Password mismatch"
             });
         }
 
-        // Find the user by ID
-        const user = await userModel.findById(id);
-        if (!user) {
-            return res.status(404).json({
-                message: "User not found"
-            });
-        }
+        const salt = await bcryptjs.genSalt(12);
+        const hashPass = await bcryptjs.hash(password, salt);
 
-        // Verify token (assuming you store the reset token in the user document)
-        if (user.resetPasswordToken !== token || user.resetPasswordExpires < Date.now()) {
+        const reset = await userModel.findByIdAndUpdate(id, { password: hashPass }, { new: true });
+        if (!reset) {
             return res.status(400).json({
-                message: "Invalid or expired reset token"
+                error: "Unable to reset password"
             });
         }
 
-        // Hash the new password
-        const saltPass = bcryptjs.genSaltSync(12);
-        const hashPass = bcryptjs.hashSync(password, saltPass);
-
-        // Update user's password and clear the reset token
-        user.password = hashPass;
-        user.resetPasswordToken = undefined;
-        user.resetPasswordExpires = undefined;
-        await user.save();
-
-        // Success
-        return res.status(200).json({
-            message: "Password successfully reset",
+        res.status(200).json({
+            message: "Password reset successfully",
+            data: reset
         });
     } catch (error) {
         res.status(500).json({
-            message: error.message
+            error: "An error occurred while resetting the password"
         });
     }
 };
 
 
+
+const getOne = async (req, res) => {
+    try {
+        const userId = req.user.UserId
+        const user = await userModel.findById(userId)
+        if (!user) {
+            return res.status(400).json({
+                error: `User not found`
+            })
+        }
+        res.status(200).json({
+            message: `User found ${user.firstName}`,
+            data: user
+        })
+    } catch (error) {
+        res.status(500).json({
+            error: error.message
+        })
+    }
+}
 
 
 //   // Set up Twitter strategy
@@ -554,4 +556,4 @@ const resetPassword = async (req, res) => {
 //     }
 //   }));
 
-module.exports = {signUp, logIn, passport, getOneUser,forgotPassword, resetPassword, verifyOTP, resendOTP, signOut}
+module.exports = {signUp, logIn, passport, getOneUser,forgotPassword, resetPassword, verifyOTP, resendOTP, signOut, getOne}

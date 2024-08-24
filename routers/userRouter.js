@@ -14,7 +14,7 @@ userRouter.get('/get-one', authenticate, getOneUser)
 userRouter.post('/sign-out/:userId', authenticate, signOut)
 userRouter.post('/verify-otp/:id', verifyOTP);
 userRouter.post("/forgot", forgotPassword)
-userRouter.post("/reset/:userId", resetPassword)
+userRouter.post("/reset/:id", resetPassword)
 userRouter.post("/resend-otp", resendOTP)
 
 
