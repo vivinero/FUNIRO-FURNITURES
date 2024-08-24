@@ -16,6 +16,7 @@ userRouter.post("/forgot", forgotPassword)
 userRouter.post("/reset/:id", resetPassword)
 userRouter.post("/resend-otp", resendOTP)
 userRouter.get("/get-one/:id", getOneUser)
+userRouter.post("/sign-out/:id", signOut)
 
 
 userRouter.get('/auth/google/callback', passport.authenticate('google', {
