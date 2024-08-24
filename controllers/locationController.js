@@ -7,18 +7,6 @@ exports.getAllCountries = (req, res) => {
 };
 
 // Get states by country code
-exports.getStatesByCountryS = (req, res) => {
-  const { countryCode } = req.params;
-  const states = State.getStatesOfCountry(countryCode);
-  if (states.length === 0) {
-    return res.status(404).json({
-      message: `No states found for the country code: ${countryCode}`
-    });
-  }
-  res.json(states);
-};
-
-
 exports.getStatesByCountry = (req, res) => {
   const { countryName } = req.params;
 
@@ -45,18 +33,6 @@ exports.getStatesByCountry = (req, res) => {
 
 
 // Get cities by state code
-exports.getCitiesByStates = (req, res) => {
-    const { countryCode, isoCode } = req.params;
-    const cities = City.getCitiesOfState(countryCode, isoCode);
-    if (cities.length === 0) {
-      return res.status(404).json({
-        message: `No cities found for the state code: ${isoCode}`
-      });
-    }
-    res.json(cities);
-};
-
-
 exports.getCitiesByState = (req, res) => {
     const { countryName, stateName } = req.params;
 

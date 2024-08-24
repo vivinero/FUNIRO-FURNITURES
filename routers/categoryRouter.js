@@ -15,7 +15,7 @@ router.put('/update-category/:id', upload.array('images', 5),authenticate, updat
 router.get('/get-categories', authenticate, getAllCategories)
 
 //endpoint to get one category by id
-router.get("/get-one-category/:categoryId",authenticate, getCategoryById)
+router.get("/get-one-category/:categoryId", getCategoryById)
 
 //endpoint to delete category by id
 router.delete("/delete-category/:categoryId", authenticate, deleteCategory)

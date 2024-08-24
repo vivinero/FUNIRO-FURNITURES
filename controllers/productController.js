@@ -194,115 +194,6 @@ const createProduct = async (req, res) => {
   }
 };
 
-const createProductss = async (req, res) => {
-  try {
-    const { categoryId } = req.params;
-    const {
-      itemName,
-      description,
-      colors,
-      sizes,
-      price,
-      stock,
-      discountPercentage = 0,
-    } = req.body;
-
-    const theCategory = await Category.findById(categoryId);
-    if (!theCategory) {
-      return res.status(404).json({ error: "Category not found" });
-    }
-
-    // Ensure stock is provided for products without sizes
-    if (!sizes && (stock === undefined || stock < 0)) {
-      return res.status(400).json({ message: "Stock quantity is required" });
-    }
-
-    // Check if files are uploaded
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({
-        message: "No files were uploaded",
-      });
-    }
-
-    const filePaths = req.files.map((file) => path.resolve(file.path));
-
-    // Check if all files exist
-    const allFilesExist = filePaths.every((filePath) =>
-      fs.existsSync(filePath)
-    );
-
-    if (!allFilesExist) {
-      return res.status(400).json({
-        message: "One or more uploaded images not found",
-      });
-    }
-
-    // Upload the images to Cloudinary and collect the results
-    const cloudinaryUploads = await Promise.all(
-      filePaths.map((filePath) =>
-        cloudinary.uploader.upload(filePath, {
-          folder: "Product-Images",
-        })
-      )
-    );
-
-    // Parse sizes if it's a string and if it's provided
-    const parsedSizes = sizes
-      ? typeof sizes === "string"
-        ? JSON.parse(sizes)
-        : sizes
-      : [];
-
-    // Calculate discounted prices only if sizes are provided
-    let discountedPrices = [];
-    if (parsedSizes.length > 0) {
-      discountedPrices = parsedSizes.map((sizeObj) => {
-        const discountedPrice = price * (1 - discountPercentage / 100);
-        return {
-          size: sizeObj.size,
-          price: discountedPrice,
-        };
-      });
-    }
-
-    // Create the new product with or without sizes
-    const newProduct = await productModel.create({
-      itemName,
-      description,
-      colors,
-      price,
-      discountPercentage,
-      discountedPrices,
-      sizes: parsedSizes,
-      images: cloudinaryUploads.map((upload) => ({
-        public_id: upload.public_id,
-        url: upload.secure_url,
-      })),
-      stock,
-      category: categoryId,
-    });
-
-    await newProduct.save();
-
-    res.status(201).json({
-      message: "Product created successfully",
-      data: newProduct,
-    });
-  } catch (error) {
-    res.status(500).json({
-      error: "Internal Server Error: " + error.message,
-    });
-  } finally {
-    // Cleanup the uploaded files
-    req.files.forEach((file) => {
-      const filePath = path.resolve(file.path);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-    });
-  }
-};
-
 //Function to update a product
 const updateProduct = async (req, res) => {
   try {
@@ -453,42 +344,6 @@ const updateStock = async (req, res) => {
   }
 };
 
-const getProductStockS = async (req, res) => {
-  try {
-    const { productId } = req.params;
-
-    // Find the product by ID
-    const product = await productModel
-      .findById(productId)
-      .select("itemName stock sizes");
-    if (!product) {
-      return res.status(400).json({ message: "Product not found." });
-    }
-
-    // If the product has sizes, return the stock for each size
-    if (product.sizes && product.sizes.length > 0) {
-      const sizeStock = product.sizes.map((sizeDetail) => ({
-        size: sizeDetail.size,
-        stock: sizeDetail.stock,
-      }));
-
-      return res.status(200).json({
-        productName: product.itemName,
-        sizeStock: sizeStock,
-      });
-    }
-
-    // If no sizes, return the general stock
-    return res.status(200).json({
-      productName: product.itemName,
-      stock: product.stock,
-    });
-  } catch (err) {
-    res
-      .status(500)
-      .json({ message: `Error fetching product stock: ${err.message}` });
-  }
-};
 //Function to get a product stock
 const getProductStock = async (req, res) => {
   try {
@@ -558,42 +413,6 @@ const getAllStock = async (req, res) => {
     return res.status(200).json({ products: productStocks });
   } catch (err) {
     return res.status(500).json({ message: `Error fetching all product stocks: ${err.message}` });
-  }
-};
-
-
-const getAllStocks = async (req, res) => {
-  try {
-    // Fetch all products from the database
-    const products = await productModel.find().select("itemName stock sizes");
-
-    // Initialize an array to hold the stock details
-    const stockDetails = products.map((product) => {
-      let totalStock = product.stock || 0; // Initialize with general stock
-
-      // If the product has sizes, calculate the total stock across all sizes
-      if (product.sizes && product.sizes.length > 0) {
-        totalStock = product.sizes.reduce(
-          (sum, size) => sum + (size.stock || 0),
-          0
-        );
-      }
-
-      return {
-        productName: product.itemName,
-        totalStock: totalStock,
-      };
-    });
-
-    // Respond with the stock details
-    res.status(200).json({
-      message: "Stock details fetched successfully.",
-      data: stockDetails,
-    });
-  } catch (err) {
-    res
-      .status(500)
-      .json({ message: `Error fetching stock details: ${err.message}` });
   }
 };
 
@@ -1239,7 +1058,7 @@ const getAllProducts = async (req, res) => {
 //     }
 // };
 
-const sortProducts = async (req, res) => {
+const sortProductss = async (req, res) => {
   try {
     const { sortBy } = req.query;
     let sortCriteria = {};
@@ -1280,6 +1099,54 @@ const sortProducts = async (req, res) => {
     });
   }
 };
+
+const sortProducts = async (req, res) => {
+  try {
+    const { sortBy, search } = req.query;
+    let sortCriteria = {};
+    let searchCriteria = {};
+
+    // Handling search by name
+    if (search) {
+      searchCriteria.itemName = new RegExp(search, 'i'); 
+    }
+
+    // Handling sort by criteria
+    switch (sortBy) {
+      case "price-asc":
+        sortCriteria["sizes.price"] = 1;
+        break;
+      case "price-desc":
+        sortCriteria["sizes.price"] = -1;
+        break;
+      case "name-asc":
+        sortCriteria.itemName = 1;
+        break;
+      case "name-desc":
+        sortCriteria.itemName = -1;
+        break;
+      case "category":
+        sortCriteria.category = 1;
+        break;
+      // Default: ascending order by price
+      default:
+        sortCriteria["sizes.price"] = 1;
+        break;
+    }
+
+
+    // Fetch products based on search and sort criteria
+    const products = await productModel.find(searchCriteria).sort(sortCriteria);
+
+
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+};
+
 
 module.exports = {
   createProduct,
