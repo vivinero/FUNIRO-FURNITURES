@@ -393,9 +393,9 @@ const logIn = async(req, res)=>{
 
 const getOneUser = async(req, res)=>{
     try {
-        const {userId} = req.user
-        console.log(userId)
-        const getOne = await userModel.findById(userId)
+        const id = req.params.id
+        console.log(id)
+        const getOne = await userModel.findById(id)
         if (!getOne) {
             return res.status(404).json({
                 error: "Unable to find user"
@@ -415,8 +415,8 @@ const getOneUser = async(req, res)=>{
 
 const signOut = async (req, res) => {
     try {
-      const userId = req.params.userId;
-      const newUser = await userModel.findById(userId);
+      const id = req.params.id;
+      const newUser = await userModel.findById(id);
       if (!newUser) {
         return res.status(404).json({
           message: "User not found",
@@ -500,27 +500,6 @@ const resetPassword = async (req, res) => {
 
 
 
-const getOne = async (req, res) => {
-    try {
-        const userId = req.user.UserId
-        const user = await userModel.findById(userId)
-        if (!user) {
-            return res.status(400).json({
-                error: `User not found`
-            })
-        }
-        res.status(200).json({
-            message: `User found ${user.firstName}`,
-            data: user
-        })
-    } catch (error) {
-        res.status(500).json({
-            error: error.message
-        })
-    }
-}
-
-
 //   // Set up Twitter strategy
 
 // passport.use(new TwitterStrategy({
@@ -556,4 +535,4 @@ const getOne = async (req, res) => {
 //     }
 //   }));
 
-module.exports = {signUp, logIn, passport, getOneUser,forgotPassword, resetPassword, verifyOTP, resendOTP, signOut, getOne}
+module.exports = {signUp, logIn, passport, getOneUser,forgotPassword, resetPassword, verifyOTP, resendOTP, signOut}
