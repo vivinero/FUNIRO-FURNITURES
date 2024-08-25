@@ -459,12 +459,24 @@ const viewCart = async (req, res) => {
     // Find the user's cart
     const cart = await cartModel.findOne({ userId: userId }).populate({
       path: "products.productId",
-      select: "itemName description productImage sizes", // Select necessary fields
+      select: "itemName description productImage sizes", 
     });
 
+    // if (!cart) {
+    //   return res.status(404).json({ message: "Cart not found." });
+    // }
+
     if (!cart) {
-      return res.status(404).json({ message: "Cart not found." });
+      // If no cart is found, return an empty array with a success message
+      return res.status(200).json({
+        message: "Cart retrieved successfully.",
+        data: {
+          products: [], // Empty array
+          total: 0, // You can include other default values if needed
+        },
+      });
     }
+
 
     // Format the cart products to include the necessary product details
     const formattedCart = {
