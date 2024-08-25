@@ -413,27 +413,35 @@ const getOneUser = async(req, res)=>{
 }
 
 
-const signOut = async (req, res) => {
+const signOut = async(req,res)=>{
     try {
-      const id = req.params.id;
-      const newUser = await userModel.findById(id);
-      if (!newUser) {
-        return res.status(404).json({
-          message: "User not found",
-        });
-      }
-  
-      newUser.token = null;
-      await newUser.save();
-      return res.status(201).json({
-        message: `user has been signed out successfully`,
-      });
-    } catch (error) {
-      return res.status(500).json({
-        message: "Internal Server Error: " + error.message,
-      });
+
+        // get the users token
+        const token = req.headers.authorization.split(' ')[1]
+        if(!token){
+            return res.status(400).json({
+                error:"Authorization failed: token not found"
+            })
+        }
+        // get the users id
+        const id = req.params.id
+        // find the user
+        const user = await userModel.findById(id)
+        // push the user to the black list and save
+        user.blackList.push(token)
+        await user.save()
+        // show a success response
+        res.status(200).json({
+            message:"successfully logged out"
+        })
+
+    } catch (err) {
+        res.status(500).json({
+            error: err.message
+        })
     }
-  };
+}
+
 
 
 const forgotPassword = async (req, res) => {
@@ -448,7 +456,7 @@ const forgotPassword = async (req, res) => {
         else {
             const name = myUser.firstName + ' ' + myUser.lastName
             const subject = 'Kindly reset your password'
-            const link = `https://furniro-iota-eight.vercel.app/#/reset-password/${myUser.id}`
+            const link = `https://furniro-iota-eight.vercel.app/#/reset-password/${myUser._id}`
             const html = resetFunc(name, link)
             sendEmail({
                 email: myUser.email,

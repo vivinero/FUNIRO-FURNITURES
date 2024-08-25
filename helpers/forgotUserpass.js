@@ -99,7 +99,7 @@ const dynamicHtml=( link,firstName, lastName)=> {
             </tr><!-- end: tr -->
             <tr>
               <td style="text-align: center; background-color: #fafafa;">
-                  © Copyright 2023. All rights reserved.<br/>
+                  © Copyright 2024. All rights reserved.<br/>
               </td>
             </tr>
           </table>
