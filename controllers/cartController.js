@@ -7,104 +7,6 @@ const mongoose = require('mongoose');
 
 
 
-const addToCartss = async (req, res) => {
-  try {
-    const { userId, productId } = req.params;
-    const { size } = req.body;
-
-    // Find the user by ID
-    const user = await userModel.findById(userId);
-    if (!user) {
-      return res.status(400).json({ message: "User does not exist." });
-    }
-
-    // Find the product by ID
-    const product = await productModel.findById(productId);
-    if (!product) {
-      return res.status(400).json({ message: "Product not found." });
-    }
-
-    // Check stock availability
-    let stockAvailable;
-    if (size) {
-      const sizeDetails = product.sizes.find((s) => s.size === size);
-      if (!sizeDetails) {
-        return res.status(400).json({ message: "Size not found for the product." });
-      }
-
-      stockAvailable = sizeDetails.stock;
-      if (stockAvailable <= 0) {
-        return res.status(400).json({ message: "This size is out of stock." });
-      }
-    } else {
-      stockAvailable = product.stock;
-      if (stockAvailable <= 0) {
-        return res.status(400).json({ message: "This product is out of stock." });
-      }
-    }
-
-    // Determine the price to use: regular or discounted
-    let price = product.price;
-
-    // If the product has a discount, calculate the discounted price
-    if (product.discountPercentage > 0) {
-      if (size) {
-        const sizeDetails = product.sizes.find((s) => s.size === size);
-        price = sizeDetails.price * (1 - product.discountPercentage / 100);
-      } else {
-        price = product.price * (1 - product.discountPercentage / 100);
-      }
-    } else if (size) {
-      const sizeDetails = product.sizes.find((s) => s.size === size);
-      price = sizeDetails.price;
-    }
-
-    // Find the user's cart or create a new one if it doesn't exist
-    let cart = await cartModel.findOne({ userId: userId });
-    if (!cart) {
-      cart = new cartModel({ userId: user._id, products: [], total: 0 });
-    }
-
-    // Check if the product with the same size is already in the cart
-    const existingItem = cart.products.find(
-      (item) => item.productId.equals(productId) && item.size === size
-    );
-
-    if (existingItem) {
-      // Update the quantity and subtotal of the existing item
-      if (existingItem.quantity + 1 > stockAvailable) {
-        return res.status(400).json({ message: "Insufficient stock available." });
-      }
-
-      existingItem.quantity += 1;
-      existingItem.sub_total = price * existingItem.quantity;
-    } else {
-      // Add a new product to the cart
-      const newItem = {
-        productId,
-        quantity: 1,
-        price: price, 
-        size, 
-        productName: product.itemName,
-        productImage: product.productImage,
-        sub_total: price,
-      };
-
-      cart.products.push(newItem);
-    }
-
-    // Recalculate the total price of the cart
-    cart.total = cart.products.reduce((acc, item) => acc + item.sub_total, 0);
-
-    // Save the updated cart to the database
-    await cart.save();
-
-    // Respond with success message and updated cart data
-    res.status(200).json({ message: "Item added to cart successfully.", data: cart });
-  } catch (err) {
-    res.status(500).json({ message: `Error adding to cart: ${err.message}` });
-  }
-};
 //Function to add to cart
 const addToCart = async (req, res) => {
   try {
@@ -313,88 +215,6 @@ const updateCart = async (req, res) => {
   }
 };
 
-const updateCarts = async (req, res) => {
-  try {
-    // Extract userId and productId from request parameters
-    const { userId, productId } = req.params;
-    const { size, quantity } = req.body;
-
-    // Find the user by ID
-    const user = await userModel.findById(userId);
-    if (!user) {
-      return res.status(400).json({ message: "User does not exist." });
-    }
-
-    // Find the product by ID
-    const product = await productModel.findById(productId);
-    if (!product) {
-      return res.status(400).json({ message: "Product not found." });
-    }
-
-    // Find the user's cart
-    let cart = await cartModel.findOne({ userId: userId });
-    if (!cart) {
-      return res.status(400).json({ message: "Cart not found." });
-    }
-
-    // Find the product in the cart with the same size
-    const item = cart.products.find(
-      (item) => item.productId.equals(productId) && item.size === size
-    );
-
-    if (!item) {
-      return res.status(400).json({
-        message: "Product with the specified size not found in cart.",
-      });
-    }
-
-    // Determine the price to use: regular or discounted
-    let price = product.price;
-
-    // If the product has a discount, calculate the discounted price
-    if (product.discountPercentage > 0) {
-      if (size) {
-        // Use the discounted price for the specific size if available
-        const sizeDetails = product.sizes.find((s) => s.size === size);
-        if (!sizeDetails) {
-          return res
-            .status(400)
-            .json({ message: "Size not found for the product." });
-        }
-        price = sizeDetails.price * (1 - product.discountPercentage / 100);
-      } else if (!size) {
-        // Use the general discounted price if there's no size
-        price = product.price * (1 - product.discountPercentage / 100);
-      }
-    } else if (size) {
-      // Use the regular price for the specific size if no discount
-      const sizeDetails = product.sizes.find((s) => s.size === size);
-      if (!sizeDetails) {
-        return res
-          .status(400)
-          .json({ message: "Size not found for the product." });
-      }
-      price = sizeDetails.price;
-    }
-
-    // Update the quantity and subtotal of the existing item
-    item.quantity = quantity;
-    item.sub_total = price * item.quantity;
-
-    // Recalculate the total price of the cart
-    cart.total = cart.products.reduce((acc, item) => acc + item.sub_total, 0);
-
-    // Save the updated cart to the database
-    await cart.save();
-
-    // Respond with success message and updated cart data
-    res.status(200).json({ message: "Cart updated successfully.", data: cart });
-  } catch (err) {
-    // Handle any errors that occur during the process
-    res.status(500).json({ message: `Error updating cart: ${err.message}` });
-  }
-};
-
 //Function to remove specific product from cart
 const removeFromCart = async (req, res) => {
   try {
@@ -462,21 +282,18 @@ const viewCart = async (req, res) => {
       select: "itemName description productImage sizes", 
     });
 
-    // if (!cart) {
-    //   return res.status(404).json({ message: "Cart not found." });
-    // }
+    
 
     if (!cart) {
       // If no cart is found, return an empty array with a success message
       return res.status(200).json({
         message: "Cart retrieved successfully.",
         data: {
-          products: [], // Empty array
-          total: 0, // You can include other default values if needed
+          products: [], 
+          total: 0, 
         },
       });
     }
-
 
     // Format the cart products to include the necessary product details
     const formattedCart = {

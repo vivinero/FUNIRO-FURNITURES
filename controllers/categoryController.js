@@ -186,6 +186,8 @@ const getAllCategories = async (req, res) => {
     });
   }
 };
+
+
 module.exports = {
   createCategory,
   updateCategory,
