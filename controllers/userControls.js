@@ -355,6 +355,14 @@ const logIn = async(req, res)=>{
                 error: "This email does not exist"
             })
         }
+
+        //check if user is verified to login
+        if (user.isVerified === false) {
+            return res.status(404).json({
+                error: `Hello ${user.firstName}, you are not verified yet. Please verify to login`
+            })
+        }
+
         //check for user password
         const checkPassword = bcryptjs.compareSync(password, user.password)
         if (!checkPassword) {
