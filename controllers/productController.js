@@ -416,7 +416,6 @@ const getAllStock = async (req, res) => {
   }
 };
 
-
 //Function to compare two products
 const compareProducts = async (req, res) => {
   try {
@@ -1028,78 +1027,6 @@ const getAllProducts = async (req, res) => {
   }
 };
 
-//sortBy Function
-// const sortProducts = async (req, res) => {
-//     try {
-//         const { sortBy } = req.query;
-//         //This object is to hold the sort criteria
-//         let sortCriteria = {};
-
-//         if (sortBy === 'price-asc') {
-//             sortCriteria.price = 1;
-//         } else if (sortBy === 'price-desc') {
-//             sortCriteria.price = -1;
-//         } else if (sortBy === 'name-asc') {
-//             sortCriteria.itemName = 1;
-//         } else if (sortBy === 'name-desc') {
-//             sortCriteria.itemName = -1;
-//         }else if (sortBy === 'category') {
-//             sortCriteria.category = 1;
-//         } else {
-//             sortCriteria.price = 1;
-//         }
-
-//         const products = await productModel.find().sort(sortCriteria);
-//         res.json(products);
-//     } catch (error) {
-//         res.status(500).json({
-//             error: error.message
-//         });
-//     }
-// };
-
-const sortProductss = async (req, res) => {
-  try {
-    const { sortBy } = req.query;
-    let sortCriteria = {};
-
-    console.log("Received sortBy:", sortBy);
-
-    switch (sortBy) {
-      case "price-asc":
-        sortCriteria["sizes.price"] = 1;
-        break;
-      case "price-desc":
-        sortCriteria["sizes.price"] = -1;
-        break;
-      case "name-asc":
-        sortCriteria.itemName = 1;
-        break;
-      case "name-desc":
-        sortCriteria.itemName = -1;
-        break;
-      case "category":
-        sortCriteria.category = 1;
-        break;
-      // set default accending order to price
-      default:
-        sortCriteria["sizes.price"] = 1;
-        break;
-    }
-
-    console.log("Sort Criteria:", sortCriteria); // Debugging statement
-
-    const products = await productModel.find().sort(sortCriteria);
-    console.log("Fetched Products:", products); // Debugging statement
-
-    res.json(products);
-  } catch (error) {
-    res.status(500).json({
-      error: error.message,
-    });
-  }
-};
-
 const sortProducts = async (req, res) => {
   try {
     const { sortBy, search } = req.query;
@@ -1146,7 +1073,6 @@ const sortProducts = async (req, res) => {
     });
   }
 };
-
 
 module.exports = {
   createProduct,
