@@ -1026,7 +1026,7 @@ const getAllProducts = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
-
+//Function to sort products
 const sortProducts = async (req, res) => {
   try {
     const { sortBy, search } = req.query;

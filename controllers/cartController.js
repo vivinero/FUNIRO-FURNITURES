@@ -481,8 +481,7 @@ if (specificErrors.some((error) => err.message.startsWith(error))) {
   }
 };
 
-
-
+// Function to get one order
 const getOrderDetails = async (req, res) => {
   try {
     const { orderId } = req.params;

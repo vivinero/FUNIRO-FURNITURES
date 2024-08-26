@@ -2,6 +2,7 @@ const Address = require("../models/formModel");
 const userModel = require("../models/userModel");
 const {validateForm} = require("../middleWares/userValidation")
 
+//Fill billing information function
 const form = async (req, res) => {
   try {
     const { error, value } = validateForm(req.body);
@@ -33,9 +34,9 @@ const form = async (req, res) => {
 
     // Validate if the user's details match
     if (
-      firstName.toLowerCase() !== user.firstName.toLowerCase() ||
-      lastName.toLowerCase() !== user.lastName.toLowerCase() ||
-      email.toLowerCase() !== user.email.toLowerCase()
+      firstName.trim().toLowerCase() !== user.firstName.toLowerCase() ||
+      lastName.trim().toLowerCase() !== user.lastName.toLowerCase() ||
+      email.trim().toLowerCase() !== user.email.toLowerCase()
     ) {
       return res.status(400).json({
         error: "User details do not match the logged-in user.",
@@ -44,10 +45,10 @@ const form = async (req, res) => {
 
     // If valid, save the address data including the userId
     const addressData = new Address({
-      userId: req.user.userId, // Include the userId in the address data
-      firstName,
-      lastName,
-      email,
+      userId: req.user.userId, 
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: email.trim(),
       companyName,
       streetAddress,
       zipCode,
