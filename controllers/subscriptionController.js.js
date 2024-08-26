@@ -26,7 +26,7 @@ const subscribe = async (req, res) => {
 
 
         // Generate confirmation link (you could include a token if you want more security)
-        const confirmationLink = `${req.protocol}://${req.get('host')}/confirm?token=${encodeURIComponent(token)}`;
+        const confirmationLink = `${req.protocol}://${req.get('host')}/confirm/${encodeURIComponent(token)}`;
 
         // Email options
         const mailOptions = {
