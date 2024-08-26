@@ -7,7 +7,7 @@ const secretKey = process.env.JWT_SECRET
 const confirmSubscription = async (req, res) => {
     try{
         // check if the token is provided in the request parameter
-        const { token } = req.query;
+        const { token } = req.params;
         // if the token is not provided send a 400 bad request message
        if (!token) {
         return res.status(400).send('No token provided.');
