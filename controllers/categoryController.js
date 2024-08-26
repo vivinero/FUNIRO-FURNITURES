@@ -65,6 +65,7 @@ const createCategory = async (req, res) => {
   }
 };
 
+//update category function
 const updateCategory = async (req, res) => {
   try {
     const { id } = req.params;

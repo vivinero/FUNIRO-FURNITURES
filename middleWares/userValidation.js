@@ -171,27 +171,27 @@ const validateForm = (data) => {
       lastName: Joi.required().messages({
         'any.required': 'Last name is required.'
       }),
-      companyName: Joi.max(50).allow('').messages({
+      companyName: Joi.string().max(50).allow('').messages({
         'string.max': 'Company name should have a maximum length of 50 characters.'
       }), 
-      streetAddress: Joi.min(5).max(100).required().messages({
+      streetAddress: Joi.string().min(5).max(100).required().messages({
         'string.min': 'Street address should have a minimum length of 5 characters.',
         'string.max': 'Street address should have a maximum length of 100 characters.',
         'any.required': 'Street address is required.'
       }),
-      zipCode: Joi.pattern(/^[0-9]{5,6}$/).required().messages({
+      zipCode: Joi.string().pattern(/^[0-9]{5,6}$/).required().messages({
         'string.pattern.base': 'Zip code must be a valid 5 or 6 digit number.',
         'any.required': 'Zip code is required.'
       }),
-      phone: Joi.pattern(/^[0-9]{10,15}$/).required().messages({
+      phone: Joi.string().pattern(/^[0-9]{10,15}$/).required().messages({
         'string.pattern.base': 'Phone number must be a valid number between 10 to 15 digits.',
         'any.required': 'Phone number is required.'
       }),
-      email: Joi.email().required().messages({
+      email: Joi.string().email().required().messages({
         'string.email': 'Email must be a valid email address.',
         'any.required': 'Email is required.'
       }),
-      additionalInformation: Joi.min(5).max(200).allow('').messages({
+      additionalInformation: Joi.string().min(5).max(200).allow('').messages({
         'string.max': 'Additional information should have a maximum length of 200 characters.',
         'string.min': 'Additional information should have a maximum length of 200 characters.'
       }), 
