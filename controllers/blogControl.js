@@ -7,15 +7,16 @@ const { Post } = require("../models/blogModel");
 const Category = require("../models/categoryModel");
 const categoryModel = require("../models/categoryModel");
 const productModel = require("../models/productModel");
+const { post } = require("../routers/userRouter");
 
 exports.createBlog = async (req, res) => {
   try {
-    const { categoryId, title, content } = req.body;
+    const { categoryName, title, content } = req.body;
     console.log("Request Body: ", req.body);
-    console.log("categoryId: ", categoryId);
+    // console.log("categoryId: ", categoryId);
 
     // Check if the category exists
-    const category = await Category.findById(categoryId);
+    const category = await Category.findOne({categoryName});
     console.log("Category found: ", category);
 
     if (!category) {
@@ -57,7 +58,7 @@ exports.createBlog = async (req, res) => {
       title,
       content,
       images: imageDetails,
-      category: categoryId,
+      category: categoryName,
       date: new Date(),
     });
 
@@ -150,3 +151,46 @@ exports.getRecentPosts = async (req, res) => {
     });
   }
 };
+
+exports.getOnePost = async (req, res) => {
+  try {
+    const id = req.params.id
+    const post = await Post.findById(id)
+    if (!post) {
+      return res.status(404).json({
+        error: "Post not found"
+      })
+    }
+    res.status(200).json({
+      message: "Post fetched successfully"
+    })
+  } catch (error) {
+    res.status(500).json({
+      error: error.message
+    })
+  }
+}
+
+exports.getAllPost = async (req, res) =>{
+  try {
+    const user = await userModel.find().populate()
+    if (!user) {
+      return res.status(400).json({
+        error: "Unable to get user who made the post"
+      })
+    }
+    const blog = user.blog
+    if (blog.length === 0) {
+      return res.status(200).json({
+        message: "There are 0 post found in this blog"
+      })
+    }
+    res.status(200).json({
+      message: `You have ${blog.length} post made in this blog`
+    })
+  } catch (error) {
+    res.status(500).json({
+      error: error.message
+    })
+  }
+}

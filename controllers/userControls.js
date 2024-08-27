@@ -51,7 +51,7 @@ passport.use(new GoogleStrategy({
           lastName: profile.name.familyName,
           isVerified: true, // Assume email is verified if using Google
         });
-  
+        console.log(profile)
         await newUser.save(); // Save the new user
         done(null, newUser); // Return new user
       } catch (err) {
