@@ -36,7 +36,7 @@ const confirmSubscription = async (req, res) => {
         await Subscriber.updateOne({ email }, { $set: { confirmed: true } });
 
         // After updating, redirect to the success page
-        res.redirect('https://furniro-iota-eight.vercel.app/#/newsLetter-succes');
+        res.redirect('https://furniro-iota-eight.vercel.app/#/newsLetter-success');
     } catch (error) {
         res.status(500).send('Invalid or expired token.' + error.message);
     }
