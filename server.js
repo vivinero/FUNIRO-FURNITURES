@@ -33,6 +33,8 @@ const subConfirmationRouter = require('./routers/subConfirmationRouter');
 const blogRouter = require("./routers/blogRouter.js");
 const locationRoutes = require('./routers/locationRouter');
 const formRouter = require('./routers/formRouter')
+const passport = require("passport");
+const session = require("express-session");
 
 
 
@@ -56,6 +58,17 @@ app.use(express.json())
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false } // Set to true if using HTTPS
+}));
+
+// Initialize Passport and manage sessions
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Routes
 app.use(userRouter);

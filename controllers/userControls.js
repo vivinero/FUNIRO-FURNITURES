@@ -51,7 +51,7 @@ passport.use(new GoogleStrategy({
           lastName: profile.name.familyName,
           isVerified: true, // Assume email is verified if using Google
         });
-  
+        console.log(profile)
         await newUser.save(); // Save the new user
         done(null, newUser); // Return new user
       } catch (err) {
@@ -65,81 +65,6 @@ passport.use(new GoogleStrategy({
 
 //otp verification time
 const OTP_EXPIRATION_TIME = 60 * 60 * 36000; // 5 minutes in milliseconds
-// const signUp = async (req, res) => {
-//     try {
-//         const { firstName, lastName, email, phoneNumber, password, confirmPassword } = req.body;
-
-//         const emailExist = await userModel.findOne({ email });
-//         if (emailExist) {
-//             return res.status(404).json({
-//                 error: "User already exists"
-//             });
-//         }
-
-//         if (confirmPassword !== password) {
-//             return res.status(400).json({
-//                 error: "Password mismatch"
-//             });
-//         }
-
-//         const salt = bcryptjs.genSaltSync(12);
-//         const hash = bcryptjs.hashSync(password, salt);
-
-//         // Register the newuser
-//         const newUser = await userModel.create({
-//             firstName: firstName.toLowerCase(),
-//             lastName: lastName.toLowerCase(),
-//             email: email.toLowerCase(),
-//             password: hash,
-//             phoneNumber,
-//             confirmPassword: hash
-//         });
-
-//         // Generate and send OTP to the user
-//         const otp = otpGenerator.generate(6, { upperCaseAlphabets: false, lowerCaseAlphabets: false, specialChars: false });
-//         const hashOTP = bcryptjs.hashSync(otp, salt);
-//         newUser.otp = hashOTP;
-//         newUser.otpExpires = Date.now() + OTP_EXPIRATION_TIME;
-//         try {
-//             await newUser.save(); 
-//         } catch (error) {
-//             console.error('Error saving user:', error);
-//         }
-
-//         const verificationLink = `https://furniro-iota-eight.vercel.app/#/otp${otp}&email=${email}`;
-
-//         const emailOptions = {
-//             email: email,
-//             subject: "Your OTP code",
-//             text: `<p>Your OTP code is <strong>${otp}</strong>. It is valid for 5 minutes.</p>`,
-//             html: dynamicHtml(otp, verificationLink),
-//         };
-
-//         const emailResult = await sendEmail(emailOptions);
-//         if (emailResult.status === 'error') {
-//             return res.status(500).json({ error: emailResult.message });
-//         }
-
-//         const token = jwt.sign({
-//             userId: newUser._id,
-//             email: newUser.email,
-//             firstName: newUser.firstName,
-//             lastName: newUser.lastName,
-//         }, process.env.JWT_SECRET, { expiresIn: "6000s" });
-
-//         console.log('Generated Token:', token);
-//         res.status(200).json({
-//             message: `Hello, ${newUser.firstName}. Your account has been successfully created and an OTP has been sent to your email.`,
-//             data: newUser,
-//             token
-//         });
-
-//     } catch (error) {
-//         res.status(500).json({
-//             error: error.message
-//         });
-//     }
-// };
 
 const signUp = async (req, res) => {
     try {
