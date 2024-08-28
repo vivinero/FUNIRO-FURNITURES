@@ -360,7 +360,7 @@ const getProductStock = async (req, res) => {
       const sizeStock = product.sizes.map((sizeDetail) => ({
         size: sizeDetail.size,
         stock: sizeDetail.stock,
-        colors: sizeDetail.colors || [],  // Return available colors for each size
+        colors: sizeDetail.colors || [],  
       }));
       
       return res.status(200).json({
@@ -373,7 +373,7 @@ const getProductStock = async (req, res) => {
     return res.status(200).json({
       productName: product.itemName,
       stock: product.stock,
-      colors: product.colors || [],  // Return available colors for the general product
+      colors: product.colors || [],  
     });
   } catch (err) {
     res.status(500).json({ message: `Error fetching product stock: ${err.message}` });
@@ -975,10 +975,10 @@ const getProductById = async (productId) => {
     product.isNew = isNew;
     product.discountedGeneralPrice = discountedGeneralPrice;
 
-    return {
+    return [{
       ...product._doc,
       label,
-    };
+    }];
   } catch (error) {
     throw error;
   }
