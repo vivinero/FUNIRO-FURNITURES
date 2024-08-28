@@ -29,7 +29,7 @@ const confirmSubscription = async (req, res) => {
         // Check if the subscription is already confirmed
         if (subscriber.confirmed === true) {
             // If already confirmed, redirect to success page
-            return res.redirect('https://furniro-iota-eight.vercel.app/#/newsLetter-succes');
+            return res.redirect('https://furniro-iota-eight.vercel.app/#/newsLetter-success');
         }
 
         // Confirm the subscription in the database and update confirmed to true
