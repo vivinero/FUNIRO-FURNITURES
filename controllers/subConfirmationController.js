@@ -5,9 +5,11 @@ require('dotenv').config();
 const secretKey = process.env.JWT_SECRET;
 
 const confirmSubscription = async (req, res) => {
+    console.log('Confirm Subscription Route Hit');
     try {
         // Extract the token from the request parameter
         const { token } = req.params;
+        console.log('Token received:', token);
 
         // If the token is not provided, send a 400 bad request message
         if (!token) {
