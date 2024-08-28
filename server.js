@@ -66,7 +66,7 @@ app.use(cartRouter);
 app.use(filterRouter);
 app.use(contactUsRouter);
 app.use(subRouter);
-app.use(subConfirmationRouter);
+app.use('/',subConfirmationRouter);
 app.use(locationRoutes);
 app.use(formRouter)
 
