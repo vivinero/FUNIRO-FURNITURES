@@ -6,7 +6,7 @@ const { createBlog, search, getRecentPosts, getAllPost, getOnePost } = require("
 blog.post("/create-blog", upload.array('images', 5), createBlog)
 blog.post("/search", search)
 blog.post("/recentPost", getRecentPosts)
-blog.post("/get-all-post", getAllPost)
-blog.post("/get-one-post/:id", getOnePost)
+blog.get("/get-all-post", getAllPost)
+blog.get("/get-one-post/:id", getOnePost)
 
 module.exports = blog

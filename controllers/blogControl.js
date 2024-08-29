@@ -8,15 +8,15 @@ const Category = require("../models/categoryModel");
 const categoryModel = require("../models/categoryModel");
 const productModel = require("../models/productModel");
 const { post } = require("../routers/userRouter");
+const userModel = require("../models/userModel")
 
 exports.createBlog = async (req, res) => {
   try {
-    const { categoryName, title, content } = req.body;
+    const { categoryId, title, content } = req.body;
     console.log("Request Body: ", req.body);
-    // console.log("categoryId: ", categoryId);
 
     // Check if the category exists
-    const category = await Category.findOne({categoryName});
+    const category = await Category.findById(categoryId);
     console.log("Category found: ", category);
 
     if (!category) {
@@ -32,21 +32,28 @@ exports.createBlog = async (req, res) => {
 
         // Check if the file exists before trying to unlink
         if (fs.existsSync(imageFilePath)) {
-          // Upload image to Cloudinary
-          const cloudinaryUpload = await cloudinary.uploader.upload(
-            imageFilePath,
-            {
-              folder: "blogImages",
-            }
-          );
+          try {
+            // Upload image to Cloudinary
+            const cloudinaryUpload = await cloudinary.uploader.upload(
+              imageFilePath,
+              {
+                folder: "blogImages",
+              }
+            );
 
-          imageDetails.push({
-            public_id: cloudinaryUpload.public_id,
-            url: cloudinaryUpload.secure_url,
-          });
+            imageDetails.push({
+              public_id: cloudinaryUpload.public_id,
+              url: cloudinaryUpload.secure_url,
+            });
 
-          // Remove file from server after upload
-          fs.unlinkSync(imageFilePath);
+            // Remove file from server after upload
+            fs.unlinkSync(imageFilePath);
+          } catch (uploadError) {
+            console.error("Error uploading file to Cloudinary:", uploadError);
+            return res.status(500).json({
+              error: "Error uploading images",
+            });
+          }
         } else {
           console.log(`File not found: ${imageFilePath}`);
         }
@@ -58,7 +65,7 @@ exports.createBlog = async (req, res) => {
       title,
       content,
       images: imageDetails,
-      category: categoryName,
+      category: categoryId,
       date: new Date(),
     });
 
@@ -67,6 +74,7 @@ exports.createBlog = async (req, res) => {
       data: newPost,
     });
   } catch (error) {
+    console.error("Error creating blog post:", error);
     res.status(500).json({
       error: `Internal Server Error: ${error.message}`,
     });
@@ -154,43 +162,43 @@ exports.getRecentPosts = async (req, res) => {
 
 exports.getOnePost = async (req, res) => {
   try {
-    const id = req.params.id
-    const post = await Post.findById(id)
+    const id = req.params.id;
+    const post = await Post.findById(id);
     if (!post) {
       return res.status(404).json({
-        error: "Post not found"
-      })
+        error: "Post not found",
+      });
     }
     res.status(200).json({
-      message: "Post fetched successfully"
-    })
+      message: "Post fetched successfully",
+      post,
+    });
   } catch (error) {
+    console.error("Error fetching post:", error);
     res.status(500).json({
-      error: error.message
-    })
+      error: "Internal Server Error",
+    });
   }
-}
+};
 
-exports.getAllPost = async (req, res) =>{
+exports.getAllPost = async (req, res) => {
   try {
-    const user = await userModel.find().populate()
-    if (!user) {
-      return res.status(400).json({
-        error: "Unable to get user who made the post"
-      })
-    }
-    const blog = user.blog
-    if (blog.length === 0) {
+    // Fetch all blog posts
+    const posts = await Post.find().populate('title', "content"); 
+    if (!posts || posts.length === 0) {
       return res.status(200).json({
-        message: "There are 0 post found in this blog"
-      })
+        message: "No posts found in this blog",
+      });
     }
+
     res.status(200).json({
-      message: `You have ${blog.length} post made in this blog`
-    })
+      message: `Found ${posts.length} post(s) in this blog`,
+      posts,
+    });
   } catch (error) {
+    console.error("Error fetching posts:", error);
     res.status(500).json({
-      error: error.message
-    })
+      error: "Internal Server Error",
+    });
   }
-}
+};
