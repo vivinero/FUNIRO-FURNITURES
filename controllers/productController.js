@@ -66,14 +66,14 @@ const createProduct = async (req, res) => {
     const {
       itemName,
       description,
-      colors,
       sizes,
       price,
       stock,
       discountPercentage = 0,
     } = req.body;
 
-    console.log("Received stock value:", stock); // Log the stock value
+    const colors = typeof req.body.colors === "string" ? JSON.parse(req.body.colors) : req.body.colors;
+
 
     const theCategory = await Category.findById(categoryId);
     if (!theCategory) {
