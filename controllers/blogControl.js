@@ -191,16 +191,28 @@ exports.getOnePost = async (req, res) => {
 exports.getAllPost = async (req, res) => {
   try {
     // Fetch all blog posts
-    const posts = await Post.find() 
+    const posts = await Post.find().populate('image'); // Ensure correct population of image field
+
+    // Log fetched posts to check for duplicates
+    console.log("Fetched posts:", posts);
+
     if (!posts || posts.length === 0) {
       return res.status(200).json({
         message: "No posts found in this blog",
       });
     }
 
+    // Remove duplicates based on unique _id or image URL
+    const uniquePosts = posts.filter((post, index, self) =>
+      index === self.findIndex((p) => (
+        p._id.toString() === post._id.toString() && 
+        p.image && p.image.url === post.image.url
+      ))
+    );
+
     res.status(200).json({
-      message: `Found ${posts.length} post(s) in this blog`,
-      posts,
+      message: `Found ${uniquePosts.length} post(s) in this blog`,
+      posts: uniquePosts,
     });
   } catch (error) {
     console.error("Error fetching posts:", error);
