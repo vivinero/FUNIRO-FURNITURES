@@ -25,38 +25,32 @@ exports.createBlog = async (req, res) => {
       });
     }
 
-    let imageDetails = [];
-    if (req.files && Array.isArray(req.files)) {
-      for (const file of req.files) {
-        const imageFilePath = path.resolve(file.path);
+    let imageDetail = null;
+    if (req.file) { 
+      const imageFilePath = path.resolve(req.file.path);
 
-        // Check if the file exists before trying to unlink
-        if (fs.existsSync(imageFilePath)) {
-          try {
-            // Upload image to Cloudinary
-            const cloudinaryUpload = await cloudinary.uploader.upload(
-              imageFilePath,
-              {
-                folder: "blogImages",
-              }
-            );
+      if (fs.existsSync(imageFilePath)) {
+        try {
+          // Upload image to Cloudinary
+          const cloudinaryUpload = await cloudinary.uploader.upload(imageFilePath, {
+            folder: "blogImages",
+          });
 
-            imageDetails.push({
-              public_id: cloudinaryUpload.public_id,
-              url: cloudinaryUpload.secure_url,
-            });
+          imageDetail = {
+            public_id: cloudinaryUpload.public_id,
+            url: cloudinaryUpload.secure_url,
+          };
 
-            // Remove file from server after upload
-            fs.unlinkSync(imageFilePath);
-          } catch (uploadError) {
-            console.error("Error uploading file to Cloudinary:", uploadError);
-            return res.status(500).json({
-              error: "Error uploading images",
-            });
-          }
-        } else {
-          console.log(`File not found: ${imageFilePath}`);
+          // Remove file from server after upload
+          fs.unlinkSync(imageFilePath);
+        } catch (uploadError) {
+          console.error("Error uploading file to Cloudinary:", uploadError);
+          return res.status(500).json({
+            error: "Error uploading image",
+          });
         }
+      } else {
+        console.log(`File not found: ${imageFilePath}`);
       }
     }
 
@@ -64,7 +58,7 @@ exports.createBlog = async (req, res) => {
     const newPost = await Post.create({
       title,
       content,
-      images: imageDetails,
+      image: imageDetail, // Storing the single image object
       category: categoryId,
       date: new Date(),
     });
@@ -85,44 +79,63 @@ exports.search = async (req, res) => {
   try {
     const { title, alphabet, category } = req.body;
 
+    // Validate input
+    if (!title && !alphabet && !category) {
+      return res.status(400).json({
+        error: "At least one search criterion (title, alphabet, or category) must be provided.",
+      });
+    }
+
+    // Initialize query object
     let query = {};
 
     // Search by title
     if (title) {
-      query.itemName = { $regex: title, $options: "i" };
+      if (title.trim() === "") {
+        return res.status(400).json({
+          error: "Search title cannot be empty or contain only spaces.",
+        });
+      }
+      query.title = { $regex: title, $options: "i" };
     }
 
     // Search by alphabet (first letter of the title)
     if (alphabet) {
-      query.itemName = { $regex: `^${alphabet}`, $options: "i" };
+      if (alphabet.trim() === "" || alphabet.length !== 1) {
+        return res.status(400).json({
+          error: "Alphabet must be a single letter.",
+        });
+      }
+      query.title = { $regex: `^${alphabet}`, $options: "i" };
     }
 
     // Search by category
     if (category) {
-      const myCategory = await categoryModel.findOne({ name: category });
+      const myCategory = await Category.findOne({ name: category });
       if (myCategory) {
         query.category = myCategory._id;
       } else {
         return res.status(404).json({
-          error: `Category "${category}" not found`,
+          error: `Category "${category}" not found.`,
         });
       }
     }
 
     // Execute the query
-    const results = await productModel.find(query).populate("category");
+    const results = await Post.find(query).populate("category");
 
     if (results.length === 0) {
       return res.status(404).json({
-        message: "No products found matching the search criteria",
+        message: "No posts found matching the search criteria.",
       });
     }
 
     res.status(200).json({
-      message: "These are your search results",
+      message: "Search results",
       data: results,
     });
   } catch (error) {
+    console.error("Error searching posts:", error);
     res.status(500).json({
       error: `Internal server error: ${error.message}`,
     });
