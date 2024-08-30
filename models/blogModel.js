@@ -14,8 +14,7 @@ const postSchema = new mongoose.Schema({
         url: String
     },
     category: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Category",
+        type: String,
         required: true
     }
 }, {timestamps: true});

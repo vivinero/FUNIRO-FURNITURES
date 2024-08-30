@@ -4,26 +4,13 @@ const fs = require("fs");
 const cloudinary = require("cloudinary").v2;
 const { upload } = require("../config/config");
 const { Post } = require("../models/blogModel");
-const Category = require("../models/categoryModel");
-const categoryModel = require("../models/categoryModel");
 const productModel = require("../models/productModel");
 const { post } = require("../routers/userRouter");
 const userModel = require("../models/userModel")
 
 exports.createBlog = async (req, res) => {
   try {
-    const { categoryId, title, content } = req.body;
-    console.log("Request Body: ", req.body);
-
-    // Check if the category exists
-    const category = await Category.findById(categoryId);
-    console.log("Category found: ", category);
-
-    if (!category) {
-      return res.status(404).json({
-        error: "Category not found",
-      });
-    }
+    const { category, title, content } = req.body;
 
     let imageDetail = null;
     if (req.file) { 
@@ -54,19 +41,26 @@ exports.createBlog = async (req, res) => {
       }
     }
 
+    // Format date "
+    const date = new Date();
+    const options = { day: '2-digit', month: 'short', year: 'numeric' };
+    const formattedDate = date.toLocaleDateString('en-GB', options);
+
     // Create new blog post
     const newPost = await Post.create({
       title,
       content,
-      image: imageDetail, // Storing the single image object
-      category: categoryId,
-      date: new Date(),
+      image: imageDetail, 
+      category,
+      date: formattedDate,
     });
 
     res.status(201).json({
       message: "Post created successfully",
       data: newPost,
+      formattedDate
     });
+
   } catch (error) {
     console.error("Error creating blog post:", error);
     res.status(500).json({
@@ -197,7 +191,7 @@ exports.getOnePost = async (req, res) => {
 exports.getAllPost = async (req, res) => {
   try {
     // Fetch all blog posts
-    const posts = await Post.find().populate('title', "content"); 
+    const posts = await Post.find() 
     if (!posts || posts.length === 0) {
       return res.status(200).json({
         message: "No posts found in this blog",
