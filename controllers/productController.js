@@ -33,6 +33,7 @@ const path = require("path");
 //   };
 // }
 
+
 function calculateDiscountAndTag(product) {
   const now = new Date();
   const productAgeInMinutes = Math.floor(
@@ -42,23 +43,26 @@ function calculateDiscountAndTag(product) {
   let isNew = productAgeInMinutes <= 2;
   let discount = product.discountPercentage / 100;
 
-  // Discount the general price
-  const discountedGeneralPrice = product.price * (1 - discount);
+  // Discount the general price and round to two decimal places
+  const discountedGeneralPrice = (product.price * (1 - discount)).toFixed(2);
 
   const discountedPrices = product.sizes.map((sizeObj) => {
-    const discountedPrice = sizeObj.price * (1 - discount);
+    // Calculate and round the discounted price for each size
+    const discountedPrice = (sizeObj.price * (1 - discount)).toFixed(2);
     return {
       size: sizeObj.size,
-      price: discountedPrice,
+      price: parseFloat(discountedPrice), // Convert back to a number if needed
     };
   });
 
   return {
     isNew,
     discountedPrices,
-    discountedGeneralPrice,
+    discountedGeneralPrice: parseFloat(discountedGeneralPrice), // Convert back to a number if needed
   };
 }
+
+
 //Function to create a product
 const createProduct = async (req, res) => {
   try {
@@ -72,8 +76,8 @@ const createProduct = async (req, res) => {
       discountPercentage = 0,
     } = req.body;
 
+    //Check if colors is a string. If so, parse it into an array. If it's already an array, it will remain unchanged.
     const colors = typeof req.body.colors === "string" ? JSON.parse(req.body.colors) : req.body.colors;
-
 
     const theCategory = await Category.findById(categoryId);
     if (!theCategory) {
@@ -142,38 +146,37 @@ const createProduct = async (req, res) => {
     let discountedPrices = [];
     if (parsedSizes.length > 0) {
       discountedPrices = parsedSizes.map((sizeObj) => {
-        const discountedPrice = sizeObj.price * (1 - discountPercentage / 100);
+        const discountedPrice = (sizeObj.price * (1 - discountPercentage / 100)).toFixed(2);
         return {
           size: sizeObj.size,
-          price: discountedPrice,
+          price: parseFloat(discountedPrice), // Convert back to number
           stock: sizeObj.stock, // Include stock for each size
         };
       });
     }
+
+    // Calculate the discounted general price
+    const discountedGeneralPrice = parseFloat((price * (1 - discountPercentage / 100)).toFixed(2));
 
     // Create the new product with or without sizes
     const newProduct = await productModel.create({
       itemName,
       description,
       colors,
-      price,
+      price: discountedGeneralPrice, 
       discountPercentage,
       discountedPrices,
-      sizes: parsedSizes, // Store the sizes with stock included
+      sizes: parsedSizes, 
       images: cloudinaryUploads.map((upload) => ({
         public_id: upload.public_id,
         url: upload.secure_url,
       })),
-      // stock: parsedSizes.length > 0 ? undefined : stock,
       stock: sizes && sizes.length > 0 ? 0 : stock, // Handle general stock if no sizes
-
       category: categoryId,
     });
 
     theCategory.products.push(newProduct._id);
     await theCategory.save();
-
-    //await newProduct.save();
 
     res.status(201).json({
       message: "Product created successfully",
@@ -193,6 +196,7 @@ const createProduct = async (req, res) => {
     });
   }
 };
+
 
 //Function to update a product
 const updateProduct = async (req, res) => {
