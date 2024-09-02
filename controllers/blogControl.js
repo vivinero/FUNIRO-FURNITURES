@@ -71,12 +71,14 @@ exports.createBlog = async (req, res) => {
 
 exports.search = async (req, res) => {
   try {
-    const { title, alphabet, category } = req.body;
+    console.log("Request Body:", req.body); // Add this line for debugging
+
+    const { title, alphabet } = req.body;
 
     // Validate input
-    if (!title && !alphabet && !category) {
+    if (!title && !alphabet) {
       return res.status(400).json({
-        error: "At least one search criterion (title, alphabet, or category) must be provided.",
+        error: "At least one search criterion (title or alphabet) must be provided.",
       });
     }
 
@@ -100,19 +102,8 @@ exports.search = async (req, res) => {
           error: "Alphabet must be a single letter.",
         });
       }
-      query.title = { $regex: `^${alphabet}`, $options: "i" };
-    }
-
-    // Search by category
-    if (category) {
-      const myCategory = await Category.findOne({ name: category });
-      if (myCategory) {
-        query.category = myCategory._id;
-      } else {
-        return res.status(404).json({
-          error: `Category "${category}" not found.`,
-        });
-      }
+      // Combine with existing title search if needed
+      query.title = query.title ? { $regex: `^${alphabet}`, $options: "i", $options: query.title.$options } : { $regex: `^${alphabet}`, $options: "i" };
     }
 
     // Execute the query
@@ -136,36 +127,33 @@ exports.search = async (req, res) => {
   }
 };
 
+
+
+
+
 exports.getRecentPosts = async (req, res) => {
   try {
-    //to allow the user specify the number of post to show
-    const { limit } = req.query;
-    //this is to set a default of 10 post if no number is provided
-    const postLimit = parseInt(limit) || 10;
+    const limit = parseInt(req.query.limit) || 10;
 
-    // Find posts and sort them by the creation date in descending order
-    const recentPosts = await Post.find({})
+    const recentPosts = await Post.find()
       .sort({ date: -1 })
-      .limit(postLimit)
-      .populate("category");
+      .limit(limit);
 
-    // Check if any posts were found
-    if (recentPosts.length === 0) {
-      return res.status(404).json({
-        message: "No recent posts found",
-      });
-    }
+    console.log("Limit: ", limit);
+    console.log("Recent Posts: ", recentPosts.map(post => ({ title: post.title, date: post.date })));
 
     res.status(200).json({
       message: "Recent posts retrieved successfully",
       data: recentPosts,
     });
   } catch (error) {
+    console.error("Error retrieving recent posts:", error);
     res.status(500).json({
       error: `Internal server error: ${error.message}`,
     });
   }
 };
+
 
 exports.getOnePost = async (req, res) => {
   try {
@@ -191,7 +179,7 @@ exports.getOnePost = async (req, res) => {
 exports.getAllPost = async (req, res) => {
   try {
     // Fetch all blog posts
-    const posts = await Post.find().populate('image'); // Ensure correct population of image field
+    const posts = await Post.find().populate('image');
 
     // Log fetched posts to check for duplicates
     console.log("Fetched posts:", posts);
