@@ -5,7 +5,12 @@ const returnSchema = new mongoose.Schema({
   productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
   size: String,
   quantity: Number,
-  reason: String,
+  reasonForReturn: String,
+  productCondition:{
+    type:String,
+    enum:["New", "Damaged", "Defective"]
+  },
+  additionalComments: String,
   status: { type: String, default: "Pending", },
   returnDate: { type: Date, default: Date.now }
 });

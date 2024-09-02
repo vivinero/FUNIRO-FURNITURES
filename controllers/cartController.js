@@ -348,12 +348,12 @@ const deleteCart = async (req, res) => {
 //Function to checkout a cart
 const { v4: uuidv4 } = require('uuid');
 
-const checkouts = async (req, res) => {
+const checkout = async (req, res) => {
   try {
     const { userId } = req.params;
 
     // Find the user by ID, including firstName and lastName
-    const user = await userModel.findById(userId).select("firstName lastName");
+    const user = await userModel.findById(userId).select("firstName lastName email");
 
     if (!user) {
       return res.status(400).json({ message: "User does not exist." });
@@ -428,21 +428,17 @@ const checkouts = async (req, res) => {
         productImage: product.productImage,
         size: item.size || "N/A",
         quantity: item.quantity,
-        price: currentPrice,
+        price: currentPrice.toFixed(2), // Apply toFixed(2) to ensure price format
         sub_total: item.sub_total,
       });
     }
-
-    // Generate a unique tracking ID
-    const trackingId = uuidv4();
 
     // Create the order
     const order = new orderModel({
       userId: userId,
       products: orderProducts,
-      total: cart.total,
+      total: cart.total.toFixed(2), // Apply toFixed(2) to ensure total format
       userName: `${user.firstName} ${user.lastName}`,
-      trackingId,
     });
 
     await order.save();
@@ -451,8 +447,37 @@ const checkouts = async (req, res) => {
     cart.total = 0;
     await cart.save();
 
+    // Send an email with order details
+    const transporter = nodemailer.createTransport({
+      service: 'gmail', 
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    });
+
+    const mailOptions = {
+      from: 'docmate24@gmail.com',
+      to: user.email,
+      subject: 'Your Order Confirmation',
+      html: `<p>Dear ${user.firstName} ${user.lastName},</p>
+      <p>Thank you for your order! Your order has been successfully placed.</p>
+      <p><strong>Order ID:</strong> ${order._id}</p>
+      <p><strong>Order Summary:</strong></p>
+      <ul>
+      ${orderProducts.map(product => `
+        <li>${product.itemName} - ${product.size} - Quantity: ${product.quantity} - Price: $${Number(product.price).toLocaleString()}</li>
+      `).join('')}
+      </ul>
+      <p><strong>Total:</strong> $${Number(order.total).toLocaleString()}</p>
+      <p>We will notify you once your order is shipped.</p>
+      <p>Thank you for shopping with us!</p>`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
     return res.status(200).json({
-      message: "Checkout successful. Your cart has been cleared.",
+      message: "Checkout successful. Your cart has been cleared. An email with your order details has been sent.",
       order,
     });
   } catch (err) {
@@ -472,7 +497,8 @@ const checkouts = async (req, res) => {
   }
 };
 
-const checkout = async (req, res) => {
+
+const checkouts = async (req, res) => {
   try {
     const { userId } = req.params;
 
@@ -577,7 +603,7 @@ const checkout = async (req, res) => {
 
     // Send an email with order details
     const transporter = nodemailer.createTransport({
-      service: 'gmail', // or your preferred email service
+      service: 'gmail', 
       auth: {
         user: process.env.EMAIL,
          pass: process.env.EMAIL_PASSWORD,
@@ -680,20 +706,44 @@ const getAllOrders = async (req, res) => {
   }
 };
 
-//function to return product
-const returnProduct = async (req, res) => {
+//function for users to get ordered products
+const getOrderProducts = async (req, res) => {
   try {
-    const { orderId } = req.params;
-    const { productId, size, quantity, reason } = req.body;
+    const { orderId } = req.body;
 
-    // Find the order
+    // Find the order by ID and populate the product details
     const order = await orderModel.findById(orderId).populate("products.productId");
 
     if (!order) {
       return res.status(404).json({ message: "Order not found." });
     }
 
-    // Find the product in the order, considering if it has a size or not
+    // Return the products in the order
+    return res.status(200).json({
+      message: "Products retrieved successfully.",
+      products: order.products,
+    });
+  } catch (err) {
+    return res.status(500).json({ message: `Error fetching products: ${err.message}` });
+  }
+};
+
+
+//function to return product
+
+
+const returnProduct = async (req, res) => {
+  try {
+    const { orderId, productId, size, quantity, reasonForReturn, productCondition, additionalComments } = req.body;
+
+    // Find the order by ID and populate the product details
+    const order = await orderModel.findById(orderId).populate("products.productId");
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found." });
+    }
+
+    // Find the product in the order
     const productInOrder = order.products.find((item) => {
       const isSameProduct = item.productId._id.equals(productId);
       const isSameSize = size ? item.size === size : item.size === "N/A";
@@ -704,8 +754,8 @@ const returnProduct = async (req, res) => {
       return res.status(404).json({ message: "Product not found in this order." });
     }
 
-    // Validate return window (e.g., 30 days from order date)
-    const returnWindow = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
+    // Validate the return window (e.g., 30 days from order date)
+    const returnWindow = 30 * 24 * 60 * 60 * 1000; 
     const now = new Date();
     const orderDate = new Date(order.orderDate);
     const isWithinReturnWindow = now - orderDate <= returnWindow;
@@ -721,11 +771,14 @@ const returnProduct = async (req, res) => {
 
     // Record the return in the order with status "Pending"
     order.returns.push({
-      productId,
-      size: size || "N/A", // Include size if provided, otherwise set it to "N/A"
+      productId: productInOrder.productId._id,
+      size: productInOrder.size || "N/A",
       quantity,
-      reason,
+      reasonForReturn,
+      productCondition,
+      additionalComments,
       status: "Pending",
+
     });
 
     // Save the updated order
@@ -741,7 +794,6 @@ const returnProduct = async (req, res) => {
 };
 
 //function to handle return processing
-
 const processReturnRequest = async (req, res) => {
   try {
     const { orderId, returnId } = req.params;
@@ -806,10 +858,10 @@ const processReturnRequest = async (req, res) => {
 //function to track order
 const trackOrder = async (req, res) => {
   try {
-    const { trackingId } = req.params;
+    const { orderId } = req.body;
 
     // Find the order by tracking ID
-    const order = await orderModel.findOne({ trackingId })
+    const order = await orderModel.findById(orderId)
 
     if (!order) {
       return res.status(404).json({ message: "Order not found." });
@@ -824,7 +876,6 @@ const trackOrder = async (req, res) => {
       order: {
         products: order.products,
         total: order.total,
-        trackingId: order.trackingId,
         status: currentStatus,
         statusUpdates: statusUpdates, 
         movementLogs: order.movementLogs, 
@@ -897,6 +948,7 @@ module.exports = {
   checkout,
   getOrderDetails,
   getAllOrders,
+  getOrderProducts,
   returnProduct,
   processReturnRequest,
   trackOrder,
