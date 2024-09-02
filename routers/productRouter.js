@@ -28,10 +28,10 @@ const {upload} = require("../middleWares/multer")
 
 
 //endpoint to create product category
-router.post('/create-product/:categoryId', upload.array('images', 5),  createProduct);
+router.post('/create-product/:categoryId', upload.array('images', 8),  createProduct);
 
 //endpoint to update product 
-router.put('/update-product/:productId', upload.array('images', 5), updateProduct);
+router.put('/update-product/:productId', upload.array('images', 8), updateProduct);
 
 //endpoint to update stock 
 router.put('/update-stock/:productId',  updateStock);

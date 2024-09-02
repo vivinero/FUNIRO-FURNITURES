@@ -1,5 +1,15 @@
-// orderModel.js
-const mongoose = require('mongoose');
+
+const mongoose = require("mongoose");
+
+const returnSchema = new mongoose.Schema({
+  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+  size: String,
+  quantity: Number,
+  reason: String,
+  status: { type: String, default: "Pending", },
+  returnDate: { type: Date, default: Date.now }
+});
+
 
 const orderSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -12,8 +22,36 @@ const orderSchema = new mongoose.Schema({
   }],
   total: { type: Number, required: true },
   orderDate: { type: Date, default: Date.now },
-  status: { type: String, default: 'Pending' } ,
-  userName: {type:String}
+  userName: {type:String},
+  status: {
+    type: String,
+    default: "Pending", 
+    enum: ['Pending', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled', 'Returned'],
+  },
+  statusUpdates: [
+    {
+      status: String,
+      timestamp: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
+  movementLogs: [
+    {
+      location: String, 
+      timestamp: {
+        type: Date,
+        default: Date.now,
+      },
+      details: String, 
+    },
+  ],
+
+  trackingId :{ type:String, unique: true},
+  returns: [returnSchema],
+
+
 });
 
 

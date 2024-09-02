@@ -199,17 +199,19 @@ const createProduct = async (req, res) => {
 
 
 //Function to update a product
-const updateProduct = async (req, res) => {
+const updateProducts = async (req, res) => {
   try {
     const productId = req.params.productId;
     const {
       itemName,
       description,
-      colors,
       sizes,
       price,
       discountPercentage = 0,
     } = req.body;
+
+    //Check if colors is a string. If so, parse it into an array. If it's already an array, it will remain unchanged.
+    const colors = typeof req.body.colors === "string" ? JSON.parse(req.body.colors) : req.body.colors;
 
     const product = await productModel.findById(productId);
 
@@ -310,6 +312,122 @@ const updateProduct = async (req, res) => {
     }
   }
 };
+
+
+const updateProduct = async (req, res) => {
+  try {
+    const productId = req.params.productId;
+    const {
+      itemName,
+      description,
+      sizes,
+      price,
+      discountPercentage = 0,
+    } = req.body;
+
+    //Check if colors is a string. If so, parse it into an array. If it's already an array, it will remain unchanged.
+    const colors = typeof req.body.colors === "string" ? JSON.parse(req.body.colors) : req.body.colors;
+
+    // Check if the product exists
+    const product = await productModel.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Handle new image uploads
+    let updatedImages = product.images; // Start with the existing images
+
+    if (req.files && req.files.length > 0) {
+      const filePaths = req.files.map((file) => path.resolve(file.path));
+
+      // Check if all files exist
+      const allFilesExist = filePaths.every((filePath) =>
+        fs.existsSync(filePath)
+      );
+
+      if (!allFilesExist) {
+        return res.status(400).json({ message: "One or more uploaded images not found" });
+      }
+
+      // Upload the images to Cloudinary
+      const cloudinaryUploads = await Promise.all(
+        filePaths.map((filePath) =>
+          cloudinary.uploader.upload(filePath, {
+            folder: "Product-Images",
+          })
+        )
+      );
+
+      // Prepare the updated images array
+      updatedImages = cloudinaryUploads.map((upload) => ({
+        public_id: upload.public_id,
+        url: upload.secure_url,
+      }));
+
+      // Optionally, delete old images from Cloudinary (if they are being replaced)
+      for (const oldImage of product.images) {
+        await cloudinary.uploader.destroy(oldImage.public_id);
+      }
+    }
+
+    // Recalculate discounted prices if sizes, price, or discountPercentage are updated
+    let discountedPrices = product.discountedPrices; // Start with existing discounted prices
+    if (sizes && (price || discountPercentage)) {
+      const parsedSizes = typeof sizes === "string" ? JSON.parse(sizes) : sizes;
+
+      if (parsedSizes && parsedSizes.length > 0) {
+        discountedPrices = parsedSizes.map((sizeObj) => {
+          const discountedPrice =
+            price * (1 - discountPercentage / 100);
+          return {
+            size: sizeObj.size,
+            price: discountedPrice,
+          };
+        });
+      } else {
+        discountedPrices = [];
+      }
+    }
+
+    // Update the product 
+    const updatedProduct = await productModel.findByIdAndUpdate(
+      productId,
+      {
+        itemName,
+        description,
+        colors,
+        sizes: sizes ? (typeof sizes === "string" ? JSON.parse(sizes) : sizes) : product.sizes,
+        price,
+        discountPercentage,
+        discountedPrices,
+        images: updatedImages,
+      },
+      { new: true } 
+    );
+
+    return res.status(200).json({
+      message: "Product updated successfully",
+      data: updatedProduct,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Internal server error: " + error.message,
+    });
+  } finally {
+    // Cleanup the uploaded files
+    if (req.files) {
+      req.files.forEach((file) => {
+        const filePath = path.resolve(file.path);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      });
+    }
+  }
+};
+
+
+
 //Function to update a product stock
 const updateStock = async (req, res) => {
   try {
