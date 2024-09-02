@@ -9,6 +9,7 @@ const {addToCart,
        checkout,
        getOrderDetails,
        getAllOrders,
+       getOrderProducts,
        returnProduct,
        processReturnRequest,
        trackOrder,
@@ -23,9 +24,10 @@ cartRouter.delete('/delete-cart/:userId', authenticate, deleteCart);
  cartRouter.post('/checkout/:userId', checkout);
  cartRouter.get("/order-details/:orderId", getOrderDetails)
  cartRouter.get('/orders', getAllOrders);
- cartRouter.post('/return-product/:orderId', returnProduct);
+ cartRouter.get("/ordered-products", getOrderProducts)
+ cartRouter.post('/return-product', returnProduct);
  cartRouter.post('/process-return-request/:orderId/:returnId', processReturnRequest);
- cartRouter.get('/track-order/:trackingId', trackOrder);
+ cartRouter.get('/track-order', trackOrder);
  cartRouter.post('/update-movement/:trackingId', updateOrderMovement);
 
 
