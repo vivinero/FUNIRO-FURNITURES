@@ -1,5 +1,6 @@
 
 const mongoose = require("mongoose");
+const AutoIncrement = require('mongoose-sequence')(mongoose);
 
 const returnSchema = new mongoose.Schema({
   productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
@@ -17,6 +18,11 @@ const returnSchema = new mongoose.Schema({
 
 
 const orderSchema = new mongoose.Schema({
+  orderId: {
+    type: Number,
+    unique: true
+  },
+
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   products: [{
     productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
@@ -28,6 +34,7 @@ const orderSchema = new mongoose.Schema({
   total: { type: Number, required: true },
   orderDate: { type: Date, default: Date.now },
   userName: {type:String},
+  email: {type:String},
   status: {
     type: String,
     default: "Pending", 
@@ -53,12 +60,14 @@ const orderSchema = new mongoose.Schema({
     },
   ],
 
-  trackingId :{ type:String, unique: true},
+  //trackingId :{ type:String, unique: true},
   returns: [returnSchema],
 
 
 });
 
+// Apply auto-increment plugin to the orderId field
+orderSchema.plugin(AutoIncrement, { inc_field: 'orderId' });
 
 const orderModel = mongoose.model("Order", orderSchema);
 module.exports = orderModel;

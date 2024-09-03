@@ -345,10 +345,9 @@ const deleteCart = async (req, res) => {
   }
 };
 
-//Function to checkout a cart
-const { v4: uuidv4 } = require('uuid');
 
-const checkout = async (req, res) => {
+//Function to checkout a cart
+const checkouts = async (req, res) => {
   try {
     const { userId } = req.params;
 
@@ -497,19 +496,16 @@ const checkout = async (req, res) => {
   }
 };
 
-
-const checkouts = async (req, res) => {
+const checkout = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Find the user by ID, including firstName and lastName
     const user = await userModel.findById(userId).select("firstName lastName email");
 
     if (!user) {
       return res.status(400).json({ message: "User does not exist." });
     }
 
-    // Find the user's cart
     let cart = await cartModel.findOne({ userId: userId }).populate({
       path: "products.productId",
       select: "itemName description productImage sizes stock price discountPercentage createdAt",
@@ -521,7 +517,6 @@ const checkouts = async (req, res) => {
 
     const orderProducts = [];
 
-    // Use for...of to ensure sequential execution
     for (const item of cart.products) {
       const product = item.productId;
 
@@ -578,21 +573,17 @@ const checkouts = async (req, res) => {
         productImage: product.productImage,
         size: item.size || "N/A",
         quantity: item.quantity,
-        price: currentPrice.toFixed(2), // Apply toFixed(2) to ensure price format
+        price: currentPrice.toFixed(2),
         sub_total: item.sub_total,
       });
     }
 
-    // Generate a unique tracking ID
-    const trackingId = uuidv4();
-
-    // Create the order
     const order = new orderModel({
       userId: userId,
       products: orderProducts,
-      total: cart.total.toFixed(2), // Apply toFixed(2) to ensure total format
+      total: cart.total.toFixed(2),
       userName: `${user.firstName} ${user.lastName}`,
-      trackingId,
+      email: user.email,
     });
 
     await order.save();
@@ -601,12 +592,11 @@ const checkouts = async (req, res) => {
     cart.total = 0;
     await cart.save();
 
-    // Send an email with order details
     const transporter = nodemailer.createTransport({
-      service: 'gmail', 
+      service: 'gmail',
       auth: {
         user: process.env.EMAIL,
-         pass: process.env.EMAIL_PASSWORD,
+        pass: process.env.EMAIL_PASSWORD,
       },
     });
 
@@ -616,7 +606,7 @@ const checkouts = async (req, res) => {
       subject: 'Your Order Confirmation',
       html: `<p>Dear ${user.firstName} ${user.lastName},</p>
       <p>Thank you for your order! Your order has been successfully placed.</p>
-      <p><strong>Tracking ID:</strong> ${trackingId}</p>
+      <p><strong>Order ID:</strong> ${order.orderId}</p>
       <p><strong>Order Summary:</strong></p>
       <ul>
       ${orderProducts.map(product => `
@@ -626,8 +616,7 @@ const checkouts = async (req, res) => {
       <p><strong>Total:</strong> $${Number(order.total).toLocaleString()}</p>
       <p>We will notify you once your order is shipped.</p>
       <p>Thank you for shopping with us!</p>`,
-};
-
+    };
 
     await transporter.sendMail(mailOptions);
 
@@ -636,19 +625,7 @@ const checkouts = async (req, res) => {
       order,
     });
   } catch (err) {
-    const specificErrors = [
-      "Product prices have changed. Please review your cart.",
-      "Product not found during checkout.",
-      "Insufficient stock for"
-    ];
-
-    if (specificErrors.some((error) => err.message.startsWith(error))) {
-      return res.status(400).json({ message: err.message });
-    }
-
-    return res
-      .status(500)
-      .json({ message: `Error during checkout: ${err.message}` });
+    return res.status(500).json({ message: `Error during checkout: ${err.message}` });
   }
 };
 
@@ -660,20 +637,20 @@ const getOrderDetails = async (req, res) => {
     const { orderId } = req.params;
 
     // Check if the orderId is a valid ObjectId
-    if (!mongoose.Types.ObjectId.isValid(orderId)) {
-      return res.status(400).json({ error: "Invalid Order ID" });
-    }
+    // if (!mongoose.Types.ObjectId.isValid(orderId)) {
+    //   return res.status(400).json({ error: "Invalid Order ID" });
+    // }
 
-    const order = await orderModel.findById(orderId).populate('products').populate('userId');
+    const order = await orderModel.findOne({orderId}).populate('products').populate('userId');
     
-    // If no order is found
+  
     if (!order) {
       return res.status(404).json({ error: "Order not found" });
     }
 
     const address = await formModel.findOne({ userId: order.userId });
     
-    // If no address is found
+  
     if (!address) {
       return res.status(404).json({ error: "Address not found" });
     }
@@ -712,7 +689,7 @@ const getOrderProducts = async (req, res) => {
     const { orderId } = req.body;
 
     // Find the order by ID and populate the product details
-    const order = await orderModel.findById(orderId).populate("products.productId");
+    const order = await orderModel.findOne({orderId}).populate("products.productId");
 
     if (!order) {
       return res.status(404).json({ message: "Order not found." });
@@ -730,14 +707,12 @@ const getOrderProducts = async (req, res) => {
 
 
 //function to return product
-
-
 const returnProduct = async (req, res) => {
   try {
     const { orderId, productId, size, quantity, reasonForReturn, productCondition, additionalComments } = req.body;
 
     // Find the order by ID and populate the product details
-    const order = await orderModel.findById(orderId).populate("products.productId");
+    const order = await orderModel.findOne({orderId}).populate("products.productId");
 
     if (!order) {
       return res.status(404).json({ message: "Order not found." });
@@ -805,7 +780,7 @@ const processReturnRequest = async (req, res) => {
     }
 
     // Find the order by ID
-    const order = await orderModel.findById(orderId);
+    const order = await orderModel.findOne({orderId});
 
     if (!order) {
       return res.status(404).json({ message: "Order not found." });
@@ -861,7 +836,7 @@ const trackOrder = async (req, res) => {
     const { orderId } = req.body;
 
     // Find the order by tracking ID
-    const order = await orderModel.findById(orderId)
+    const order = await orderModel.findOne({orderId})
 
     if (!order) {
       return res.status(404).json({ message: "Order not found." });
@@ -880,7 +855,6 @@ const trackOrder = async (req, res) => {
         statusUpdates: statusUpdates, 
         movementLogs: order.movementLogs, 
         orderDate: order.orderDate,
-        userName: order.userName,
       },
     });
   } catch (err) {
@@ -894,11 +868,11 @@ const trackOrder = async (req, res) => {
 //function to update order movement
 const updateOrderMovement = async (req, res) => {
   try {
-    const { trackingId } = req.params;
+    const { orderId } = req.params;
     const { location, details, status } = req.body;
 
     // Find the order by tracking ID
-    const order = await orderModel.findOne({ trackingId });
+    const order = await orderModel.findOne({orderId});
 
     if (!order) {
       return res.status(404).json({ message: "Order not found." });
@@ -935,7 +909,6 @@ const updateOrderMovement = async (req, res) => {
     });
   }
 };
-
 
 
 

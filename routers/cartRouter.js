@@ -28,7 +28,7 @@ cartRouter.delete('/delete-cart/:userId', authenticate, deleteCart);
  cartRouter.post('/return-product', returnProduct);
  cartRouter.post('/process-return-request/:orderId/:returnId', processReturnRequest);
  cartRouter.get('/track-order', trackOrder);
- cartRouter.post('/update-movement/:trackingId', updateOrderMovement);
+ cartRouter.post('/update-movement/:orderId', updateOrderMovement);
 
 
 module.exports = cartRouter
