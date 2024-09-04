@@ -1,12 +1,9 @@
 const express = require("express");
 require('./config/config');
 const cors = require('cors');
+const cron = require('node-cron');
+const orderModel = require('./models/orderModel'); 
 
-
-// const corsOptions = { 
-//     origin: process.env.CORS_ORIGIN || '*' ,
-//     optionSuccessStatus:200
-// }
 const allowedOrigins = [process.env.CORS_ORIGIN, process.env.CORS_ORIGIN_PRODUCTION];
 
 const corsOptions = {
@@ -100,6 +97,139 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: 'Internal Server Error: ' + err });
     next();
 });
+
+
+
+
+// Example: Automate order movement every 5 minutes
+const nodemailer = require('nodemailer');
+
+// Email configuration
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL, // Your email
+    pass: process.env.EMAIL_PASSWORD, // Your email password
+  },
+});
+
+cron.schedule('*/1 * * * *', async () => {
+  try {
+    const orders = await orderModel.find({
+      status: { $in: ['Pending', 'Processing', 'Shipped', 'Out for Delivery'] },
+    });
+
+    orders.forEach(async (order) => {
+      let nextStatus;
+      let location;
+      let emailSubject;
+      let emailMessage;
+
+      // Determine the next status and email content based on the current status
+      switch (order.status) {
+        case 'Pending':
+          nextStatus = 'Processing';
+          location = 'Warehouse';
+          emailSubject = 'Your order is now being processed!';
+          emailMessage = 'Your order has moved from Pending to Processing.';
+          break;
+        case 'Processing':
+          nextStatus = 'Shipped';
+          location = 'On the way to the sorting center';
+          emailSubject = 'Your order has been shipped!';
+          emailMessage = 'Your order has moved from Processing to Shipped.';
+          break;
+        case 'Shipped':
+          nextStatus = 'Out for Delivery';
+          location = 'In transit to delivery address';
+          emailSubject = 'Your order is out for delivery!';
+          emailMessage = 'Your order has moved from Shipped to Out for Delivery.';
+          break;
+        case 'Out for Delivery':
+          nextStatus = 'Delivered';
+          location = 'At delivery address';
+          emailSubject = 'Your order has been delivered!';
+          emailMessage = 'Your order has moved from Out for Delivery to Delivered.';
+          break;
+        default:
+          return;
+      }
+
+      // Update the order's status and movement logs
+      order.status = nextStatus;
+      order.movementLogs.push({
+        status: nextStatus,
+        location: location,
+        details: `Order status updated to ${nextStatus}.`,
+      });
+
+      await order.save();
+
+      // Send the notification email
+      const mailOptions = {
+        from: process.env.EMAIL,
+        to: order.email, 
+        subject: emailSubject,
+        html: `<p>Dear ${order.userName},</p>
+               <p>${emailMessage}</p>
+               <p>Location: ${location}</p>
+               <p>Thank you for shopping with us!</p>`,
+      };
+
+      await transporter.sendMail(mailOptions);
+    });
+  } catch (err) {
+    console.error(`Error automating order movement: ${err.message}`);
+  }
+});
+
+
+
+// cron.schedule('*/5 * * * *', async () => {
+//   try {
+//     const orders = await orderModel.find({ status: { $in: ['Pending', 'Processing', 'Shipped'] } });
+
+//     orders.forEach(async (order) => {
+//       let nextStatus;
+//       let location;
+
+//       // Determine the next status based on current status
+//       switch (order.status) {
+//         case 'Pending':
+//           nextStatus = 'Processing';
+//           location = 'Warehouse';
+//           break;
+//         case 'Processing':
+//           nextStatus = 'Shipped';
+//           location = 'On the way to the sorting center';
+//           break;
+//         case 'Shipped':
+//           nextStatus = 'Out for Delivery';
+//           location = 'In transit to delivery address';
+//           break;
+//         case 'Out for Delivery':
+//           nextStatus = 'Delivered';
+//           location = 'At delivery address';
+//           break;
+//         default:
+//           return;
+//       }
+
+//       // Update the order's status and movement logs
+//       order.status = nextStatus;
+//       order.movementLogs.push({
+//         status: nextStatus,
+//         location: location,
+//         details: `Order status updated to ${nextStatus}.`,
+//       });
+
+//       await order.save();
+//     });
+//   } catch (err) {
+//     console.error(`Error automating order movement: ${err.message}`);
+//   }
+// });
+
 
 // Start the server
 const PORT = process.env.PORT || 3000;

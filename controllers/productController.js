@@ -33,6 +33,7 @@ const path = require("path");
 //   };
 // }
 
+
 function calculateDiscountAndTag(product) {
   const now = new Date();
   const productAgeInMinutes = Math.floor(
@@ -42,23 +43,26 @@ function calculateDiscountAndTag(product) {
   let isNew = productAgeInMinutes <= 2;
   let discount = product.discountPercentage / 100;
 
-  // Discount the general price
-  const discountedGeneralPrice = product.price * (1 - discount);
+  // Discount the general price and round to two decimal places
+  const discountedGeneralPrice = (product.price * (1 - discount)).toFixed(2);
 
   const discountedPrices = product.sizes.map((sizeObj) => {
-    const discountedPrice = sizeObj.price * (1 - discount);
+    // Calculate and round the discounted price for each size
+    const discountedPrice = (sizeObj.price * (1 - discount)).toFixed(2);
     return {
       size: sizeObj.size,
-      price: discountedPrice,
+      price: parseFloat(discountedPrice), // Convert back to a number if needed
     };
   });
 
   return {
     isNew,
     discountedPrices,
-    discountedGeneralPrice,
+    discountedGeneralPrice: parseFloat(discountedGeneralPrice), // Convert back to a number if needed
   };
 }
+
+
 //Function to create a product
 const createProduct = async (req, res) => {
   try {
@@ -66,14 +70,14 @@ const createProduct = async (req, res) => {
     const {
       itemName,
       description,
-      colors,
       sizes,
       price,
       stock,
       discountPercentage = 0,
     } = req.body;
 
-    console.log("Received stock value:", stock); // Log the stock value
+    //Check if colors is a string. If so, parse it into an array. If it's already an array, it will remain unchanged.
+    const colors = typeof req.body.colors === "string" ? JSON.parse(req.body.colors) : req.body.colors;
 
     const theCategory = await Category.findById(categoryId);
     if (!theCategory) {
@@ -142,38 +146,37 @@ const createProduct = async (req, res) => {
     let discountedPrices = [];
     if (parsedSizes.length > 0) {
       discountedPrices = parsedSizes.map((sizeObj) => {
-        const discountedPrice = sizeObj.price * (1 - discountPercentage / 100);
+        const discountedPrice = (sizeObj.price * (1 - discountPercentage / 100)).toFixed(2);
         return {
           size: sizeObj.size,
-          price: discountedPrice,
+          price: parseFloat(discountedPrice), // Convert back to number
           stock: sizeObj.stock, // Include stock for each size
         };
       });
     }
+
+    // Calculate the discounted general price
+    const discountedGeneralPrice = parseFloat((price * (1 - discountPercentage / 100)).toFixed(2));
 
     // Create the new product with or without sizes
     const newProduct = await productModel.create({
       itemName,
       description,
       colors,
-      price,
+      price: discountedGeneralPrice, 
       discountPercentage,
       discountedPrices,
-      sizes: parsedSizes, // Store the sizes with stock included
+      sizes: parsedSizes, 
       images: cloudinaryUploads.map((upload) => ({
         public_id: upload.public_id,
         url: upload.secure_url,
       })),
-      // stock: parsedSizes.length > 0 ? undefined : stock,
       stock: sizes && sizes.length > 0 ? 0 : stock, // Handle general stock if no sizes
-
       category: categoryId,
     });
 
     theCategory.products.push(newProduct._id);
     await theCategory.save();
-
-    //await newProduct.save();
 
     res.status(201).json({
       message: "Product created successfully",
@@ -194,18 +197,21 @@ const createProduct = async (req, res) => {
   }
 };
 
+
 //Function to update a product
-const updateProduct = async (req, res) => {
+const updateProducts = async (req, res) => {
   try {
     const productId = req.params.productId;
     const {
       itemName,
       description,
-      colors,
       sizes,
       price,
       discountPercentage = 0,
     } = req.body;
+
+    //Check if colors is a string. If so, parse it into an array. If it's already an array, it will remain unchanged.
+    const colors = typeof req.body.colors === "string" ? JSON.parse(req.body.colors) : req.body.colors;
 
     const product = await productModel.findById(productId);
 
@@ -306,6 +312,122 @@ const updateProduct = async (req, res) => {
     }
   }
 };
+
+
+const updateProduct = async (req, res) => {
+  try {
+    const productId = req.params.productId;
+    const {
+      itemName,
+      description,
+      sizes,
+      price,
+      discountPercentage = 0,
+    } = req.body;
+
+    //Check if colors is a string. If so, parse it into an array. If it's already an array, it will remain unchanged.
+    const colors = typeof req.body.colors === "string" ? JSON.parse(req.body.colors) : req.body.colors;
+
+    // Check if the product exists
+    const product = await productModel.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Handle new image uploads
+    let updatedImages = product.images; // Start with the existing images
+
+    if (req.files && req.files.length > 0) {
+      const filePaths = req.files.map((file) => path.resolve(file.path));
+
+      // Check if all files exist
+      const allFilesExist = filePaths.every((filePath) =>
+        fs.existsSync(filePath)
+      );
+
+      if (!allFilesExist) {
+        return res.status(400).json({ message: "One or more uploaded images not found" });
+      }
+
+      // Upload the images to Cloudinary
+      const cloudinaryUploads = await Promise.all(
+        filePaths.map((filePath) =>
+          cloudinary.uploader.upload(filePath, {
+            folder: "Product-Images",
+          })
+        )
+      );
+
+      // Prepare the updated images array
+      updatedImages = cloudinaryUploads.map((upload) => ({
+        public_id: upload.public_id,
+        url: upload.secure_url,
+      }));
+
+      // Optionally, delete old images from Cloudinary (if they are being replaced)
+      for (const oldImage of product.images) {
+        await cloudinary.uploader.destroy(oldImage.public_id);
+      }
+    }
+
+    // Recalculate discounted prices if sizes, price, or discountPercentage are updated
+    let discountedPrices = product.discountedPrices; // Start with existing discounted prices
+    if (sizes && (price || discountPercentage)) {
+      const parsedSizes = typeof sizes === "string" ? JSON.parse(sizes) : sizes;
+
+      if (parsedSizes && parsedSizes.length > 0) {
+        discountedPrices = parsedSizes.map((sizeObj) => {
+          const discountedPrice =
+            price * (1 - discountPercentage / 100);
+          return {
+            size: sizeObj.size,
+            price: discountedPrice,
+          };
+        });
+      } else {
+        discountedPrices = [];
+      }
+    }
+
+    // Update the product 
+    const updatedProduct = await productModel.findByIdAndUpdate(
+      productId,
+      {
+        itemName,
+        description,
+        colors,
+        sizes: sizes ? (typeof sizes === "string" ? JSON.parse(sizes) : sizes) : product.sizes,
+        price,
+        discountPercentage,
+        discountedPrices,
+        images: updatedImages,
+      },
+      { new: true } 
+    );
+
+    return res.status(200).json({
+      message: "Product updated successfully",
+      data: updatedProduct,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Internal server error: " + error.message,
+    });
+  } finally {
+    // Cleanup the uploaded files
+    if (req.files) {
+      req.files.forEach((file) => {
+        const filePath = path.resolve(file.path);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      });
+    }
+  }
+};
+
+
+
 //Function to update a product stock
 const updateStock = async (req, res) => {
   try {
@@ -360,7 +482,7 @@ const getProductStock = async (req, res) => {
       const sizeStock = product.sizes.map((sizeDetail) => ({
         size: sizeDetail.size,
         stock: sizeDetail.stock,
-        colors: sizeDetail.colors || [],  // Return available colors for each size
+        colors: sizeDetail.colors || [],  
       }));
       
       return res.status(200).json({
@@ -373,7 +495,7 @@ const getProductStock = async (req, res) => {
     return res.status(200).json({
       productName: product.itemName,
       stock: product.stock,
-      colors: product.colors || [],  // Return available colors for the general product
+      colors: product.colors || [],  
     });
   } catch (err) {
     res.status(500).json({ message: `Error fetching product stock: ${err.message}` });
@@ -975,10 +1097,10 @@ const getProductById = async (productId) => {
     product.isNew = isNew;
     product.discountedGeneralPrice = discountedGeneralPrice;
 
-    return {
+    return [{
       ...product._doc,
       label,
-    };
+    }];
   } catch (error) {
     throw error;
   }

@@ -9,7 +9,7 @@ const { upload } = require("../middleWares/multer");
 router.post('/create-category', upload.array('images', 5), authenticate, createCategory)
 
 //endpoint to update product category
-router.put('/update-category/:id', upload.array('images', 5),authenticate, updateCategory)
+router.put('/update-category/:id', upload.array('images', 5), updateCategory)
 
 //endpoint to get all product categories
 router.get('/get-categories', authenticate, getAllCategories)
