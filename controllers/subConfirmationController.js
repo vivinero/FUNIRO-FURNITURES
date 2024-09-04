@@ -28,17 +28,19 @@ const confirmSubscription = async (req, res) => {
             return res.status(404).json({ message: 'Subscriber not found.' });
         }
 
+              // Confirm the subscription in the database and update confirmed to true
+        await Subscriber.updateOne({ email }, { $set: { confirmed: true } });
+
+              // After updating, redirect to the success page
+              res.redirect('https://furniro-iota-eight.vercel.app/#/newsLetter-success');
+
         // Check if the subscription is already confirmed
         if (subscriber.confirmed === true) {
             // If already confirmed, redirect to success page
             return res.redirect('https://furniro-iota-eight.vercel.app/#/newsLetter-success');
         }
 
-        // Confirm the subscription in the database and update confirmed to true
-        await Subscriber.updateOne({ email }, { $set: { confirmed: true } });
-
-        // After updating, redirect to the success page
-        res.redirect('https://furniro-iota-eight.vercel.app/#/newsLetter-success');
+  
     } catch (error) {
         res.status(500).send('Invalid or expired token.' + error.message);
     }
