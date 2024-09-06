@@ -45,6 +45,8 @@ const authenticate = async (req, res, next) => {
 
 
 
+
+
 // Authorized users to getAll
 const Admin = (req, res, next) => {
     authenticate(req, res, async () => {

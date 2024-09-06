@@ -30,14 +30,12 @@ const subConfirmationRouter = require('./routers/subConfirmationRouter');
 const blogRouter = require("./routers/blogRouter.js");
 const locationRoutes = require('./routers/locationRouter');
 const formRouter = require('./routers/formRouter')
-
+const purchaseHistoryRouter = require("./routers/purchaseHistoryRouter.js")
 
 
 // Create express instance
 const app = express();
 
-
-// Middleware for CORS
 // app.use(cors("*"))
  app.use(cors(corsOptions))
 
@@ -46,9 +44,6 @@ app.options('*', cors(corsOptions));
 
 
 app.use(express.json())
-
-
-// app.use(bodyParser.urlencoded({ extended: true }));
 
 
 app.use(express.json());
@@ -66,6 +61,7 @@ app.use(subRouter);
 app.use(subConfirmationRouter);
 app.use(locationRoutes);
 app.use(formRouter)
+app.use (purchaseHistoryRouter)
 
 
 // Static file serving
@@ -95,8 +91,8 @@ const nodemailer = require('nodemailer');
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.EMAIL, // Your email
-    pass: process.env.EMAIL_PASSWORD, // Your email password
+    user: process.env.EMAIL,
+    pass: process.env.EMAIL_PASSWORD, 
   },
 });
 
@@ -172,6 +168,7 @@ cron.schedule('*/1 * * * *', async () => {
 
 
 
+
 // cron.schedule('*/5 * * * *', async () => {
 //   try {
 //     const orders = await orderModel.find({ status: { $in: ['Pending', 'Processing', 'Shipped'] } });
@@ -219,7 +216,18 @@ cron.schedule('*/1 * * * *', async () => {
 
 
 // Start the server
+
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+const server =app.listen(PORT, () => {
     console.log(`Server is listening on port: ${PORT}`);
+});
+
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use.`);
+  } else {
+    console.error(`Server error: ${err.message}`);
+  }
 });

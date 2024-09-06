@@ -31,7 +31,6 @@ exports.getStatesByCountry = (req, res) => {
   res.json(states);
 };
 
-
 // Get cities by state code
 exports.getCitiesByState = (req, res) => {
     const { countryName, stateName } = req.params;
