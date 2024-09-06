@@ -10,12 +10,13 @@ const jwtSecret = process.env.JWT_SECRET;
 userRouter.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 userRouter.post('/sign-up', signUp)
 userRouter.post('/login', logIn)
-userRouter.get('/get-one', authenticate, getOneUser)
 userRouter.post('/sign-out/:userId', authenticate, signOut)
 userRouter.post('/verify-otp/:id', verifyOTP);
 userRouter.post("/forgot", forgotPassword)
-userRouter.post("/reset/:userId", resetPassword)
+userRouter.post("/reset/:id", resetPassword)
 userRouter.post("/resend-otp", resendOTP)
+userRouter.get("/get-one/:id", getOneUser)
+userRouter.post("/sign-out/:id", signOut)
 
 
 userRouter.get('/auth/google/callback', passport.authenticate('google', {

@@ -19,5 +19,6 @@ const transporter = nodemailer.createTransport({
     }catch(error){
         throw new Error('Failed to send email: ' + error.message);
     }
+    // console.log('Email sent: ' + info.response);
 }
 module.exports=sendEmail
