@@ -9,14 +9,16 @@ const postSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    images: [{
+    image: {
         public_id: String,
         url: String
-    }],
+    },
     category: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Category",
+        type: String,
         required: true
+    },
+    date: { 
+        type: Date, default: Date.now 
     }
 }, {timestamps: true});
 

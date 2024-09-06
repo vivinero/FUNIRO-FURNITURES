@@ -32,6 +32,11 @@ const locationRoutes = require('./routers/locationRouter');
 const formRouter = require('./routers/formRouter')
 const purchaseHistoryRouter = require("./routers/purchaseHistoryRouter.js")
 
+const passport = require("passport");
+const session = require("express-session");
+
+
+
 
 // Create express instance
 const app = express();
@@ -49,6 +54,17 @@ app.use(express.json())
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false } // Set to true if using HTTPS
+}));
+
+// Initialize Passport and manage sessions
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Routes
 app.use(userRouter);
 app.use(categoryRouter);
@@ -58,7 +74,7 @@ app.use(cartRouter);
 app.use(filterRouter);
 app.use(contactUsRouter);
 app.use(subRouter);
-app.use(subConfirmationRouter);
+app.use('/',subConfirmationRouter);
 app.use(locationRoutes);
 app.use(formRouter)
 app.use (purchaseHistoryRouter)
