@@ -20,8 +20,11 @@ const confirmSubscription = async (req, res) => {
         const decoded = jwt.verify(token, secretKey);
         const email = decoded.email;
 
+        console.log('email: ', email)
+
         // Find the subscriber by email
         const subscriber = await Subscriber.findOne({ email });
+        console.log('subscriber found: ', subscriber)
 
         // Check if the subscriber exists
         if (!subscriber) {
@@ -29,7 +32,8 @@ const confirmSubscription = async (req, res) => {
         }
 
               // Confirm the subscription in the database and update confirmed to true
-        await Subscriber.updateOne({ email }, { $set: { confirmed: true } });
+        const confirmation = await Subscriber.updateOne({ email }, { $set: { confirmed: true } });
+        console.log(confirmation + 'confirmed')
 
               // After updating, redirect to the success page
               res.redirect('https://furniro-iota-eight.vercel.app/#/newsLetter-success');
@@ -42,7 +46,7 @@ const confirmSubscription = async (req, res) => {
 
   
     } catch (error) {
-        res.status(500).send('Invalid or expired token.' + error.message);
+        res.status(500).json('Invalid or expired token.' + error.message);
     }
 }
 
