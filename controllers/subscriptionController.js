@@ -24,7 +24,6 @@ const subscribe = async (req, res) => {
         const token = jwt.sign({ email }, secretKey, { expiresIn: '1h' });
 
 
-
         // Generate confirmation link 
         const confirmationLink = `https://funiro-furnitures.onrender.com/confirm/${encodeURIComponent(token)}`;
        
