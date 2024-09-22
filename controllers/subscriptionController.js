@@ -25,7 +25,7 @@ const subscribe = async (req, res) => {
 
 
         // Generate confirmation link 
-        const confirmationLink = `https://funiro-furnitures.onrender.com/confirm/${encodeURIComponent(token)}`;
+        const confirmationLink = `https://funiro-furnitures.onrender.com/confirm/${token}`;
        
         // Email options
         const mailOptions = {
