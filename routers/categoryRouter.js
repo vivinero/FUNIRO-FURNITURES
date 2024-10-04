@@ -12,7 +12,7 @@ router.post('/create-category', upload.array('images', 5), authenticate, createC
 router.put('/update-category/:id', upload.array('images', 5), updateCategory)
 
 //endpoint to get all product categories
-router.get('/get-categories', authenticate, getAllCategories)
+router.get('/get-categories',  getAllCategories)
 
 //endpoint to get one category by id
 router.get("/get-one-category/:categoryId", getCategoryById)

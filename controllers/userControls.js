@@ -267,8 +267,6 @@ const resendOTP = async (req, res) => {
 };
 
 
-
-
 const logIn = async(req, res)=>{
     try {
         //get data from the request body
@@ -374,7 +372,6 @@ const signOut = async(req,res)=>{
         })
     }
 }
-
 
 
 const forgotPassword = async (req, res) => {

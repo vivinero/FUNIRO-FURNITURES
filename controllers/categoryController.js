@@ -60,10 +60,19 @@ const createCategory = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
-      error: error.message,
+      error: "Internal Server Error: " + error.message,
+    });
+  } finally {
+    // Cleanup the uploaded files
+    req.files.forEach((file) => {
+      const filePath = path.resolve(file.path);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
     });
   }
 };
+
 
 //update category function
 const updateCategory = async (req, res) => {
@@ -151,6 +160,7 @@ const deleteCategory = async (req, res) => {
     });
   }
 };
+
 
 // Get a single category by ID
 const getCategoryById = async (req, res) => {
