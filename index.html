@@ -12,7 +12,7 @@
     <script>
         document.getElementById('downloadBtn').addEventListener('click', async () => {
             try {
-                const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmM4ODg5MzYxNjk4OWI4ODdmZDkyZDMiLCJmaXJzdE5hbWUiOiJhZGUiLCJsYXN0TmFtZSI6Im1pa2UiLCJlbWFpbCI6ImFkZWt1bmxlbWljaGFlbDEzMTlAZ21haWwuY29tIiwiaWF0IjoxNzI1NjA5NzAwLCJleHAiOjE3MjU3ODI1MDB9.Hy1wk3-4ld_VN3B4WmjjfeMBNzz_pNonMuPND8xMoN8';
+                const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmM4ODg5MzYxNjk4OWI4ODdmZDkyZDMiLCJmaXJzdE5hbWUiOiJhZGUiLCJsYXN0TmFtZSI6Im1pa2UiLCJlbWFpbCI6ImFkZWt1bmxlbWljaGFlbDEzMTlAZ21haWwuY29tIiwiaWF0IjoxNzI2MTE3MTUxLCJleHAiOjE3MjYyODk5NTF9.v3had5dYW9eVguDbfxPn_cL84zSGS_OJypnzU4vtKio';
                 const response = await fetch('http://localhost:5002/purchase-history/pdf', {
                     method: 'GET',
                     headers: {

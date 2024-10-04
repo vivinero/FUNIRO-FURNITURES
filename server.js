@@ -55,7 +55,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
-    secret: process.env.SESSION_SECRET,
+    secret: process.env.JWT_SECRET,
     resave: false,
     saveUninitialized: true,
     cookie: { secure: false } // Set to true if using HTTPS

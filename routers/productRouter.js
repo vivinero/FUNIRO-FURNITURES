@@ -23,7 +23,9 @@ const {  createProduct,
     getAllStock,
     getProductStock
      } = require("../controllers/productController");
-const { authenticate } = require("../middleWares/authentication");
+const { authenticate,
+  Admin
+ } = require("../middleWares/authentication");
 const {upload} = require("../middleWares/multer")
 
 
