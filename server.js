@@ -19,7 +19,7 @@ const corsOptions = {
 
 
 // Routers
-const userRouter = require("./routers/userRouter");
+const userRouter = require("./routers/userRouter.js");
 const categoryRouter = require("./routers/categoryRouter");
 const productRouter = require("./routers/productRouter");
 const cartRouter = require("./routers/cartRouter");

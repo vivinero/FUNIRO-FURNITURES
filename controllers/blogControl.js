@@ -5,7 +5,6 @@ const cloudinary = require("cloudinary").v2;
 const { upload } = require("../config/config");
 const { Post } = require("../models/blogModel");
 const productModel = require("../models/productModel");
-const { post } = require("../routers/userRouter");
 const userModel = require("../models/userModel")
 
 exports.createBlog = async (req, res) => {

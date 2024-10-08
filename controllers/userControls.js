@@ -6,59 +6,60 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { sendEmail } = require('../helpers/mail'); 
 const dynamicHtml = require('../helpers/html')
-const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const { account } = require('../appwrite');
+// const passport = require('passport');
+// const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const port = process.env.port
 require("dotenv").config()
 // const TwitterStrategy = require('passport-twitter').Strategy;
 
-// Serialize and Deserialize User
-passport.serializeUser((user, done) => {
-    done(null, user._id); // Serialize the user by their unique MongoDB ID
-});
+// // Serialize and Deserialize User
+// passport.serializeUser((user, done) => {
+//     done(null, user._id); // Serialize the user by their unique MongoDB ID
+// });
 
-passport.deserializeUser(async (id, done) => {
-    try {
-      const user = await userModel.findById(id);
-      done(null, user);
-    } catch (err) {
-      done(err, null);
-    }
-});
+// passport.deserializeUser(async (id, done) => {
+//     try {
+//       const user = await userModel.findById(id);
+//       done(null, user);
+//     } catch (err) {
+//       done(err, null);
+//     }
+// });
 
 
-// Google OAuth Strategy
-passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: process.env.GOOGLECALLBACKURL,
-    passReqToCallback: true,
-  },
-    async (request, accessToken, refreshToken, profile, done) => {
-      try {
-        // Check if the user exists
-        const existingUser = await userModel.findOne({ email: profile.emails[0].value });
+// // Google OAuth Strategy
+// passport.use(new GoogleStrategy({
+//     clientID: process.env.GOOGLE_CLIENT_ID,
+//     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+//     callbackURL: process.env.GOOGLECALLBACKURL,
+//     passReqToCallback: true,
+//   },
+//     async (request, accessToken, refreshToken, profile, done) => {
+//       try {
+//         // Check if the user exists
+//         const existingUser = await userModel.findOne({ email: profile.emails[0].value });
   
-        if (existingUser) {
-          return done(null, existingUser); // Existing user found
-        }
+//         if (existingUser) {
+//           return done(null, existingUser); // Existing user found
+//         }
   
-        // Create a new user
-        const newUser = new userModel({
-          googleId: profile.id,
-          email: profile.emails[0].value,
-          firstName: profile.name.givenName,
-          lastName: profile.name.familyName,
-          isVerified: true, // Assume email is verified if using Google
-        });
-        console.log(profile)
-        await newUser.save(); // Save the new user
-        done(null, newUser); // Return new user
-      } catch (err) {
-        done(err, null);
-      }
-    }
-  ));
+//         // Create a new user
+//         const newUser = new userModel({
+//           googleId: profile.id,
+//           email: profile.emails[0].value,
+//           firstName: profile.name.givenName,
+//           lastName: profile.name.familyName,
+//           isVerified: true, // Assume email is verified if using Google
+//         });
+//         console.log(profile)
+//         await newUser.save(); // Save the new user
+//         done(null, newUser); // Return new user
+//       } catch (err) {
+//         done(err, null);
+//       }
+//     }
+//   ));
 
 
 
@@ -146,6 +147,33 @@ const signUp = async (req, res) => {
         });
     }
 };
+
+
+//signup with google
+const sign_up_with_google = async (req, res) => {
+    try {
+        const redirectURL = 'https://funiro-furnitures.onrender.com/auth/callback'; 
+        await account.createOAuth2Session(
+            'google', 
+            "https://funiro-furnitures.onrender.com/auth/callback",
+             "https://funiro-furnitures.onrender.com/auth/callback/failure"
+            );
+
+        // Fetch user details after OAuth session creation
+        const user = await account.get();
+        
+        res.status(200).json({
+            message: "Google sign-in successful",
+            user: user
+        });
+    } catch (error) {
+        res.status(500).json({
+            error: error.message
+        });
+    }
+};
+
+
 
 
 
@@ -476,4 +504,4 @@ const resetPassword = async (req, res) => {
 //     }
 //   }));
 
-module.exports = {signUp, logIn, passport, getOneUser,forgotPassword, resetPassword, verifyOTP, resendOTP, signOut}
+module.exports = {signUp, logIn, getOneUser,forgotPassword, resetPassword, verifyOTP, resendOTP, signOut, sign_up_with_google}
