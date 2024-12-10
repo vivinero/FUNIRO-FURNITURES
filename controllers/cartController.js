@@ -395,7 +395,7 @@ const viewCart = async (req, res) => {
     // Find the user's cart
     const cart = await cartModel.findOne({ userId: userId }).populate({
       path: "products.productId",
-      select: "itemName description productImage sizes",
+      select: "itemName description images sizes",
     });
 
     if (!cart) {
@@ -422,7 +422,7 @@ const viewCart = async (req, res) => {
           productId: item.productId._id,
           productName: item.productId.itemName,
           description: item.productId.description,
-          productImage: item.productId.productImage,
+          productImage: item.productId.images,
           size: item.size,
           quantity: item.quantity,
           price: sizeDetails ? sizeDetails.price : item.price,

@@ -244,6 +244,6 @@ server.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
     console.error(`Port ${PORT} is already in use.`);
   } else {
-    console.error(`Server error: ${err.message}`);
+    console.error(`Server error: ${err.message}`); 
   }
 });
